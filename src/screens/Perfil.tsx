@@ -21,7 +21,7 @@ export default function Perfil() {
   const profile = useStore((s) => s.profile);
   const events = useStore((s) => s.events);
   const stats = useMemo(() => computeStats(events), [events]);
-  const [sheet, setSheet] = useState<"about" | "policy" | "delete" | null>(null);
+  const [sheet, setSheet] = useState<"about" | "policy" | "delete" | "logout" | null>(null);
   const [toast, setToast] = useState("");
   const [editing, setEditing] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -252,9 +252,39 @@ export default function Perfil() {
             </button>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 4, margin: "30px 20px 0" }}>
-            {profile.account === "account" && <button className="press" onClick={logout} style={{ height: 52, borderRadius: 26, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 600, color: C.media, background: C.bandeja }}>Cerrar sesión</button>}
-            <button className="press" onClick={() => setSheet("delete")} style={{ height: 52, borderRadius: 26, fontSize: 15, fontWeight: 600, color: C.peligro }}>{profile.account === "account" ? "Borrar mi cuenta" : "Borrar mis datos"}</button>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, margin: "30px 20px 0" }}>
+            <button
+              className="press"
+              onClick={() => setSheet("logout")}
+              style={{
+                height: 52,
+                borderRadius: 26,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                fontSize: 16,
+                fontWeight: 600,
+                color: C.tinta,
+                background: C.bandeja,
+                border: "1px solid #E4DCCF",
+                cursor: "pointer",
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+              Cerrar sesión
+            </button>
+            <button
+              className="press"
+              onClick={() => setSheet("delete")}
+              style={{ height: 48, borderRadius: 24, fontSize: 15, fontWeight: 600, color: C.peligro, background: "transparent", border: "none", cursor: "pointer" }}
+            >
+              {profile.account === "account" ? "Borrar mi cuenta" : "Borrar mis datos"}
+            </button>
           </div>
         </div>
       </div>
@@ -285,6 +315,41 @@ export default function Perfil() {
           </div>
         </Sheet>
       )}
+
+      {sheet === "logout" && (
+        <Sheet label="Cerrar sesión" onClose={() => setSheet(null)}>
+          <SheetHeader title="¿Cerrar sesión?" onClose={() => setSheet(null)} />
+          <p style={{ margin: "4px 0 16px", fontSize: 15, color: C.media }}>
+            Se cerrará tu sesión en este dispositivo. Podrás volver a entrar con tu número celular para recuperar tu canasta y huerta sincronizadas.
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <button
+              className="press"
+              onClick={logout}
+              style={{
+                height: 56,
+                borderRadius: 28,
+                background: C.bandeja,
+                color: C.tinta,
+                fontSize: 17,
+                fontWeight: 700,
+                border: "1px solid #E0D6C6",
+                cursor: "pointer",
+              }}
+            >
+              Sí, cerrar sesión
+            </button>
+            <button
+              className="press"
+              onClick={() => setSheet(null)}
+              style={{ height: 52, borderRadius: 26, fontSize: 16, fontWeight: 600, color: C.media, background: "transparent", border: "none", cursor: "pointer" }}
+            >
+              Cancelar
+            </button>
+          </div>
+        </Sheet>
+      )}
+
       {sheet === "delete" && (
         <Sheet label="Borrar todo" onClose={() => setSheet(null)}>
           <SheetHeader title="¿Borrar todo?" onClose={() => setSheet(null)} />

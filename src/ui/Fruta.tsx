@@ -124,7 +124,7 @@ export function Fruta({
         />
 
         {/* Insignia 3D si tiene moho o daño crítico */}
-        {isMoldy && (
+        {isMoldy && !decorative && (
           <div
             title="Revisar: daño detectado"
             style={{

@@ -149,17 +149,31 @@ export const RECIPES: Recipe[] = [
   },
   {
     id: "guacamole", name: "Guacamole", time: "10 min", minutes: 10, difficulty: 1, serves: "4 porciones",
-    tags: ["salado", "rapido"], saves: ["aguacate", "tomate"], dish: "bowl", color: "#8FB45A", topping: "#E24A36", validated: true,
+    tags: ["salado", "rapido"], saves: ["aguacate", "tomate", "limon"], dish: "bowl", color: "#8FB45A", topping: "#E24A36", validated: true,
     ingredients: [
       { kind: "aguacate", qty: 2, label: "2 aguacates" },
       { kind: "tomate", qty: 1, label: "1 tomate" },
-      { pantry: "limon", qty: 1, label: "1 limón" },
+      { kind: "limon", qty: 1, label: "1 limón" },
       { pantry: "cilantro", qty: 1, label: "Cilantro" },
     ],
     steps: [
-      { action: "mezclar", verb: "Machaca", detail: "2 aguacates", note: "con limón y sal", show: ["aguacate"] },
+      { action: "mezclar", verb: "Machaca", detail: "2 aguacates", note: "con limón y sal", show: ["aguacate", "limon"] },
       { action: "cortar", verb: "Pica", detail: "tomate y cilantro", note: "bien finito", show: ["tomate"] },
       { action: "mezclar", verb: "Mezcla", detail: "todo", note: "pruébalo de sal" },
+    ],
+  },
+  {
+    id: "limonada-casera", name: "Limonada fresca", time: "5 min", minutes: 5, difficulty: 1, serves: "2 vasos",
+    tags: ["dulce", "rapido"], saves: ["limon"], dish: "glass", color: "#C6E872", validated: true,
+    ingredients: [
+      { kind: "limon", qty: 2, label: "2 limones jugosos" },
+      { pantry: "agua", qty: 1, label: "2 vasos de agua fría" },
+      { pantry: "azucar", qty: 1, label: "2 cucharadas de panela o azúcar" },
+    ],
+    steps: [
+      { action: "cortar", verb: "Corta", detail: "los limones por la mitad", note: "guarda las cáscaras", show: ["limon"] },
+      { action: "licuar", verb: "Licúa", detail: "el zumo con agua y panela", note: "o revuelve con cuchara", timer: 30 },
+      { action: "servir", verb: "Sirve", detail: "con hielo al gusto", note: "ralla un poco de cáscara encima" },
     ],
   },
   {

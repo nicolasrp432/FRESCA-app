@@ -1,4 +1,4 @@
-export const KINDS = ["banano", "papaya", "fresa", "mango", "tomate", "aguacate"] as const;
+export const KINDS = ["banano", "papaya", "fresa", "mango", "tomate", "aguacate", "limon"] as const;
 export type Kind = (typeof KINDS)[number];
 export type Stage = 0 | 1 | 2 | 3;
 
@@ -142,6 +142,24 @@ export const FOODS: Record<Kind, Food> = {
     save: [{ icon: "nevera", label: "A la nevera entero" }, { icon: "congelar", label: "Congela en puré" }],
     buyTip: "Uno en su punto y uno duro.",
     buyLess: "Compra aguacates de a uno",
+  },
+  limon: {
+    kind: "limon", name: "Limón", plural: "Limones", article: "un", grams: 80, pesos: 600,
+    days: [4, 4, 3],
+    stageNames: ["Fresco", "Jugoso", "Piel seca", "Pasado"],
+    storage: { title: "En la nevera en bolsa o frasco", tip: "Cortado: tapa la mitad con plástico o boca abajo en un plato." },
+    nutrition: { label: "1 limón", per: "Orientativo · 1 mediano", values: [{ v: "2,8 g", u: "fibra" }, { v: "116", u: "mg potasio" }, { v: "31", u: "mg vit. C" }, { v: "17", u: "kcal" }] },
+    ideas: [
+      [{ t: "Limonada fresca", m: "5 min" }, { t: "Aderezo para ensalada", m: "2 min" }],
+      [{ t: "Con sal y mango", m: "2 min" }, { t: "Para el guacamole", m: "5 min" }],
+      [{ t: "Ralla la cáscara", m: "2 min" }, { t: "Té caliente con miel", m: "5 min" }],
+      [{ t: "Desinfectante casero", m: "10 min" }, { t: "A la compostera", m: "1 min" }],
+    ],
+    normal: [{ stage: 2, label: "Piel seca" }, { stage: 1, label: "Firme y brillante" }, { stage: 3, label: "Blando o arrugado" }],
+    discard: ["moho", "liquido", "agrio"],
+    save: [{ icon: "congelar", label: "Congela en cubos de jugo" }, { icon: "nevera", label: "En frasco con agua" }],
+    buyTip: "Compra limones pesados para su tamaño.",
+    buyLess: "Compra limones de a tres",
   },
 };
 

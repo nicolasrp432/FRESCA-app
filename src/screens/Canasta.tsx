@@ -7,14 +7,14 @@ import { BottomNav, C, Sheet, SheetHeader, useNow } from "../ui/Common";
 import { Fruta } from "../ui/Fruta";
 import { IconBasket, IconCheck, IconScan } from "../ui/Icons";
 
-/* Arriba y más grande: lo que va primero */
+/* Arriba y más grande: lo que va primero, acomodado dentro del canasto */
 const PILE = [
-  { left: 112, top: 250, size: 170, delay: 60 },
-  { left: 236, top: 236, size: 120, delay: 120 },
-  { left: 30, top: 230, size: 140, delay: 180 },
-  { left: 150, top: 120, size: 100, delay: 240 },
-  { left: 70, top: 150, size: 100, delay: 300 },
-  { left: 216, top: 160, size: 96, delay: 360 },
+  { left: 125, top: 185, size: 125, delay: 60 },
+  { left: 200, top: 195, size: 105, delay: 120 },
+  { left: 68, top: 188, size: 110, delay: 180 },
+  { left: 140, top: 145, size: 95, delay: 240 },
+  { left: 95, top: 155, size: 90, delay: 300 },
+  { left: 185, top: 155, size: 90, delay: 360 },
 ];
 
 const REASON_ICONS: Record<TossReason, ReactElement> = {
@@ -106,7 +106,8 @@ export default function Canasta() {
           )}
 
           {!empty && view === "canasto" && (
-            <div className="enter scene" style={{ height: 430, marginTop: 10 }}>
+            <div className="enter scene" style={{ height: 430, marginTop: 10, position: "relative" }}>
+              {/* Capa trasera: Canasto base */}
               <div
                 style={{
                   position: "absolute",
@@ -119,6 +120,7 @@ export default function Canasta() {
                   alignItems: "center",
                   justifyContent: "center",
                   pointerEvents: "none",
+                  zIndex: 1,
                 }}
               >
                 <img
@@ -134,19 +136,63 @@ export default function Canasta() {
                   }}
                 />
               </div>
+
+              {/* Capa intermedia: Alimentos dentro del canasto */}
               {[...pile.keys()].reverse().map((idx) => {
                 const it = pile[idx];
                 const p = PILE[idx];
                 const st = currentStage(it, now);
                 return (
-                  <a key={it.id} href={`#/ficha/${it.kind}`} className="press drop" aria-label={`${itemName(it)} ×${it.qty}, ${stageWord(st).toLowerCase()}`} style={{ position: "absolute", left: p.left, top: p.top, animationDelay: `${p.delay}ms` }}>
-                    <Fruta kind={it.kind} stage={st} size={p.size} decorative />
+                  <a
+                    key={it.id}
+                    href={`#/ficha/${it.kind}`}
+                    className="press drop"
+                    aria-label={`${itemName(it)} ×${it.qty}, ${stageWord(st).toLowerCase()}`}
+                    style={{
+                      position: "absolute",
+                      left: p.left,
+                      top: p.top,
+                      zIndex: 2,
+                      animationDelay: `${p.delay}ms`,
+                    }}
+                  >
+                    <Fruta kind={it.kind} stage={st} ring={false} size={p.size} decorative />
                   </a>
                 );
               })}
-              <span style={{ position: "absolute", left: 20, top: 20, fontSize: 15, color: C.suave }}>Arriba y más grande: lo que va primero.</span>
+
+              {/* Capa frontal: Borde trenzado del canasto para dar profundidad 3D real */}
+              <div
+                style={{
+                  position: "absolute",
+                  left: "50%",
+                  top: 45,
+                  transform: "translateX(-50%)",
+                  width: 350,
+                  height: 350,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  pointerEvents: "none",
+                  zIndex: 3,
+                }}
+              >
+                <img
+                  src="/images/3d/canasta_rim.png"
+                  alt=""
+                  loading="eager"
+                  draggable={false}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                  }}
+                />
+              </div>
+
+              <span style={{ position: "absolute", left: 20, top: 20, fontSize: 15, color: C.suave, zIndex: 5 }}>Arriba y más grande: lo que va primero.</span>
               {extra > 0 && (
-                <button className="press" onClick={() => setView("lista")} style={{ position: "absolute", right: 20, top: 46, height: 36, padding: "0 12px", borderRadius: 18, background: "#FFFFFF", fontSize: 14, fontWeight: 700 }}>+{extra} más</button>
+                <button className="press" onClick={() => setView("lista")} style={{ position: "absolute", right: 20, top: 46, height: 36, padding: "0 12px", borderRadius: 18, background: "#FFFFFF", fontSize: 14, fontWeight: 700, zIndex: 5 }}>+{extra} más</button>
               )}
             </div>
           )}

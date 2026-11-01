@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FOODS, KINDS, STAGE_COLORS, type Kind, type Stage } from "../data/foods";
 import { RECIPES } from "../data/recipes";
-import { analyze, brightness, fileToJpegBase64, FrescaError, toJpegBase64, type Analysis, type DetectedItem } from "../lib/api";
+import { analyze, brightness, fileToJpegWithMeta, FrescaError, toJpegWithMeta, type Analysis, type ColorMeta, type DetectedItem } from "../lib/api";
 import { vibrate } from "../lib/device";
 import { stageWord } from "../lib/domain";
 import { navigate, query, usePath } from "../lib/router";
@@ -9,7 +9,19 @@ import { actions } from "../state/store";
 import { C, ghostBtn, primaryBtn, Toast } from "../ui/Common";
 import { Fruta } from "../ui/Fruta";
 import { Difficulty, IconAlert, IconBack, IconBasket, IconCheck, IconClock, IconClose, IconGallery, IconRetry, IconSun, IconTorch } from "../ui/Icons";
-import { Compost, DishArt, SaveArt, Smoothie } from "../ui/Illustrations";
+import { Compost, SaveArt } from "../ui/Illustrations";
+
+const RECIPE_3D: Record<string, string> = {
+  "batido-banano": "/images/3d/smoothie.png",
+  "pan-banano": "/images/3d/receta-pan.png",
+  "jugo-papaya-fresa": "/images/3d/smoothie.png",
+  "paletas-papaya": "/images/3d/receta-paleta.png",
+  "mermelada-fresa": "/images/3d/receta-mermelada.png",
+  "hogao": "/images/3d/receta-hogao.png",
+  "guacamole": "/images/3d/receta-guacamole.png",
+  "avena-banano": "/images/3d/receta-avena.png",
+  "limonada-casera": "/images/3d/smoothie.png",
+};
 
 type View = "camara" | "analizando" | "resultado" | "danio" | "noreco";
 interface Found extends DetectedItem {
@@ -93,7 +105,7 @@ export default function Escanear() {
   };
 
   /* ── Analizar ───────────────────────────── */
-  const run = async (image: string) => {
+  const run = async (image: string, meta?: ColorMeta) => {
     setPhoto(`data:image/jpeg;base64,${image}`);
     setFound(null);
     setAdded(0);
@@ -104,7 +116,7 @@ export default function Escanear() {
     const ac = new AbortController();
     abortRef.current = ac;
     try {
-      const res: Analysis = await analyze(image, ac.signal);
+      const res: Analysis = await analyze(image, meta, ac.signal);
       const items: Found[] = res.items
         .filter((i) => KINDS.includes(i.kind))
         .map((i, n) => ({ ...i, stage: Math.max(0, Math.min(3, i.stage)) as Stage, uid: `${i.kind}-${n}`, sure: i.confidence >= LOW || !i.alternative }));
@@ -121,7 +133,6 @@ export default function Escanear() {
       }
       setFound(items);
       vibrate(30);
-      // deja ver cómo caen al plato antes de pasar al resultado
       window.setTimeout(() => !ac.signal.aborted && setView("resultado"), 1300);
     } catch (e) {
       if ((e as Error).name === "AbortError") return;
@@ -131,11 +142,9 @@ export default function Escanear() {
         return;
       }
       setNoreco(
-        code === "ai_off"
-          ? { title: "El reconocimiento no está activo aquí.", sub: "Mientras tanto, elige a mano lo que tienes.", dark: false, aiOff: true }
-          : code === "rate" || code === "busy"
-            ? { title: "Vamos muy rápido.", sub: "Espera un momentico y prueba otra vez.", dark: false }
-            : { title: "Algo se enredó.", sub: "Prueba otra vez en un momento.", dark: false },
+        code === "rate" || code === "busy"
+          ? { title: "Vamos muy rápido.", sub: "Espera un momentico y prueba otra vez.", dark: false }
+          : { title: "Algo se enredó.", sub: "Prueba otra vez en un momento.", dark: false },
       );
       setView("noreco");
     } finally {
@@ -151,20 +160,21 @@ export default function Escanear() {
     }
     vibrate(15);
     const light = brightness(v);
-    const image = await toJpegBase64(v, v.videoWidth, v.videoHeight);
-    if (light < 38) {
+    const { image, meta } = await toJpegWithMeta(v, v.videoWidth, v.videoHeight);
+    if (light < 22) {
       setPhoto(`data:image/jpeg;base64,${image}`);
       setNoreco({ title: "¿Eh? No la reconocí.", sub: "Está muy oscuro. Pasa con la luz, o muy de cerca.", dark: true });
       setView("noreco");
       return;
     }
-    run(image);
+    run(image, meta);
   };
 
   const onFile = async (f: File | undefined) => {
     if (!f) return;
     try {
-      run(await fileToJpegBase64(f));
+      const { image, meta } = await fileToJpegWithMeta(f);
+      run(image, meta);
     } catch {
       setToast("No pude abrir esa foto. Prueba con otra.");
     }
@@ -182,6 +192,17 @@ export default function Escanear() {
   const main = useMemo(() => [...healthy].sort((a, b) => b.stage - a.stage)[0] ?? null, [healthy]);
   const ladder = main ? RECIPES.filter((r) => r.saves.includes(main.kind)).slice(0, 4) : [];
   const damaged = visible.find((f) => f.uid === focus);
+
+  const totalPesos = useMemo(
+    () => healthy.reduce((acc, f) => acc + (FOODS[f.kind]?.pesos ?? 500) * f.count, 0),
+    [healthy]
+  );
+  const totalGrams = useMemo(
+    () => healthy.reduce((acc, f) => acc + (FOODS[f.kind]?.grams ?? 100) * f.count, 0),
+    [healthy]
+  );
+  const totalKg = (totalGrams / 1000).toFixed(2);
+  const totalCo2 = ((totalGrams / 1000) * 0.83).toFixed(2);
 
   const confirmKind = (f: Found, kind: Kind) => setFound((list) => list?.map((x) => (x.uid === f.uid ? { ...x, kind, sure: true, confidence: 1 } : x)) ?? null);
 
@@ -316,6 +337,43 @@ export default function Escanear() {
                 {visible.length === 0 && <p style={{ padding: 16, textAlign: "center", fontSize: 15, fontWeight: 600 }}>Todo a la tierra. ¡Bien hecho!</p>}
               </div>
 
+              {/* Indicador de impacto real y ahorro en pesos colombianos */}
+              {healthy.length > 0 && (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8, margin: "14px 12px 0" }}>
+                  <div className="tray" style={{ padding: "10px 8px", borderRadius: 18, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: C.suave }}>Ahorro estimado</span>
+                    <span className="bric num" style={{ fontSize: 18, fontWeight: 800, color: C.hoja }}>${totalPesos.toLocaleString("es-CO")}</span>
+                  </div>
+                  <div className="tray" style={{ padding: "10px 8px", borderRadius: 18, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: C.suave }}>Rescatado</span>
+                    <span className="bric num" style={{ fontSize: 18, fontWeight: 800, color: C.tinta }}>{totalGrams >= 1000 ? `${totalKg} kg` : `${totalGrams} g`}</span>
+                  </div>
+                  <div className="tray" style={{ padding: "10px 8px", borderRadius: 18, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: C.suave }}>CO₂ evitado</span>
+                    <span className="bric num" style={{ fontSize: 18, fontWeight: 800, color: "#2F6B3A" }}>{totalCo2} kg</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Guía en tiempo real para cáscaras y desperdicios */}
+              <div style={{ margin: "14px 12px 0", padding: "14px 16px", borderRadius: 22, background: "#F5EEE4", display: "flex", flexDirection: "column", gap: 6, border: "1px solid #E4D7C5" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <img src="/images/3d/compost.png" alt="" style={{ width: 32, height: 32, objectFit: "contain" }} />
+                  <span className="bric" style={{ fontSize: 16, fontWeight: 800 }}>Aprovechamiento de desperdicios</span>
+                </div>
+                <p style={{ margin: 0, fontSize: 14, color: C.media, lineHeight: 1.4 }}>
+                  {main?.kind === "limon"
+                    ? "¡No botes las cáscaras de limón! Ralla la piel para infusiones o macéralas en vinagre blanco para un limpiador desinfectante antigrasa 100% natural."
+                    : main?.kind === "banano"
+                    ? "La cáscara de banano es rica en potasio: déjala 24h en agua y riega tus plantas, o córtala en trozos para compost rápido."
+                    : main?.kind === "aguacate"
+                    ? "La pepa y cáscara de aguacate son excelentes para abonar la tierra y aportar minerales a tus plantas."
+                    : main?.kind === "tomate"
+                    ? "Piel y semillas de tomate: sofríelas con cebolla para base de salsas o añade a caldo casero."
+                    : "Cáscaras y restos orgánicos: devuélvelos a la tierra para nutrir tus macetas y huerta comunitaria."}
+                </p>
+              </div>
+
               {main && (
                 <>
                   <h2 className="bric" style={{ margin: "26px 20px 2px", fontSize: 26, fontWeight: 800, letterSpacing: "-0.025em" }}>La escalera del rescate</h2>
@@ -325,7 +383,11 @@ export default function Escanear() {
                   <div className="hscroll" style={{ gap: 12, padding: "34px 20px 10px" }}>
                     {ladder.map((r) => (
                       <a key={r.id} href={`#/receta/${r.id}`} className="press tray" style={{ flex: "none", width: 196, scrollSnapAlign: "start", borderRadius: 24, padding: "0 14px 14px", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6 }}>
-                        {r.dish === "glass" ? <Smoothie width={96} height={118} color={r.color} style={{ marginTop: -30 }} /> : <DishArt dish={r.dish} color={r.color} topping={r.topping} size={110} style={{ marginTop: -30 }} />}
+                        <img
+                          src={RECIPE_3D[r.id] || "/images/3d/receta.png"}
+                          alt=""
+                          style={{ width: 100, height: 100, objectFit: "contain", marginTop: -20, filter: "drop-shadow(0 8px 16px rgba(0,0,0,0.14))" }}
+                        />
                         <span className="bric" style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.015em" }}>{r.name}</span>
                         <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: C.suave }}><IconClock size={15} />{r.time}<Difficulty level={r.difficulty} /></span>
                       </a>

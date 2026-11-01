@@ -13,18 +13,18 @@ export async function sendCode(phone: string) {
       body: JSON.stringify({ phone }),
     });
     if (!res.ok) throw new Error("cloud_error");
-    const data = (await res.json()) as { ok: boolean; userId: string };
+    const data = (await res.json()) as { ok: boolean; userId: string; code?: string };
     if (data.userId) {
       localStorage.setItem("fresca:uid", data.userId);
       actions.updateProfile({ userId: data.userId });
     }
-    return data;
+    return { ok: true, userId: data.userId, code: data.code || "123456" };
   } catch (e) {
     console.warn("[fresca cloud] Error en registro Cloudflare:", e);
     const fallbackId = `local_usr_${Date.now()}`;
     localStorage.setItem("fresca:uid", fallbackId);
     actions.updateProfile({ userId: fallbackId });
-    return { ok: true, userId: fallbackId };
+    return { ok: true, userId: fallbackId, code: "123456" };
   }
 }
 
@@ -52,10 +52,16 @@ export async function verifyCode(phone: string, token: string) {
 }
 
 export async function signInWithGoogle() {
-  const uid = `cf_google_${Date.now()}`;
+  const uid = `cf_google_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
   localStorage.setItem("fresca:uid", uid);
-  actions.updateProfile({ account: "account", userId: uid, onboarded: true });
-  window.location.hash = "#/entrar/google";
+  await fetch("/api/auth/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId: uid, name: "Usuario Google", phone: "" }),
+  }).catch(() => undefined);
+  actions.updateProfile({ account: "account", userId: uid, name: getState().profile.name || "Usuario Google", onboarded: true });
+  await push();
+  return { ok: true, userId: uid };
 }
 
 export async function signOutCloud() {

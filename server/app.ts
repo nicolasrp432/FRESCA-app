@@ -15,10 +15,29 @@ export type Env = {
     OPENROUTER_API_KEY?: string;
     FRESCA_MODEL?: string;
     FRESCA_KV?: KvLike;
+    AI?: {
+      run(model: string, input: Record<string, unknown>): Promise<any>;
+    };
   };
 };
 
 export const app = new Hono<Env>();
+
+app.get("/api/ai/gen-image", async (c) => {
+  const prompt = c.req.query("prompt");
+  if (!prompt) return c.text("missing prompt", 400);
+  if (!c.env?.AI) return c.text("no AI binding", 503);
+  try {
+    const response = await c.env.AI.run("@cf/bytedance/stable-diffusion-xl-lightning", {
+      prompt,
+    });
+    return new Response(response, {
+      headers: { "Content-Type": "image/jpeg" },
+    });
+  } catch (e: any) {
+    return c.text(e?.message || "error", 500);
+  }
+});
 
 /* Memoria de respaldo en caso de que KV no esté vinculado aún */
 const memoryStore = new Map<string, string>();
@@ -174,14 +193,24 @@ app.delete("/api/state/delete", async (c) => {
 
 app.post("/api/analyze", bodyLimit({ maxSize: 6 * 1024 * 1024 }), async (c) => {
   const { apiKey, model, provider } = getEnvConfig(c);
-  if (!aiEnabled(apiKey)) return c.json({ error: "ai_off" }, 503);
-  if (!allow(ipOf(c))) return c.json({ error: "rate" }, 429);
-  const body = await c.req.json<{ image?: string; mediaType?: string }>().catch(() => ({}) as { image?: string; mediaType?: string });
+  if (!allow(ipOf(c), 60)) return c.json({ error: "rate" }, 429);
+  const body = (await c.req.json<{ image?: string; mediaType?: string; meta?: any }>().catch(() => ({}))) as {
+    image?: string;
+    mediaType?: string;
+    meta?: any;
+  };
   const mediaType = body.mediaType === "image/png" || body.mediaType === "image/webp" ? body.mediaType : "image/jpeg";
   const image = (body.image || "").replace(/^data:[^,]+,/, "");
-  if (!image || image.length < 200) return c.json({ error: "bad_image" }, 400);
+  if (!image || image.length < 50) return c.json({ error: "bad_image" }, 400);
   try {
-    return c.json(await analyzeImage(image, mediaType, { apiKey, model, provider }));
+    const analysis = await analyzeImage(image, mediaType, {
+      apiKey,
+      model,
+      provider,
+      cfAi: c.env?.AI,
+      meta: body.meta,
+    });
+    return c.json(analysis);
   } catch (e) {
     return handleError(c, e);
   }

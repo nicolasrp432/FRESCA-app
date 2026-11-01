@@ -39,7 +39,17 @@ async function post<T>(url: string, body: unknown, signal?: AbortSignal): Promis
   return (await res.json()) as T;
 }
 
-export const analyze = (image: string, signal?: AbortSignal) => post<Analysis>("/api/analyze", { image, mediaType: "image/jpeg" }, signal);
+export interface ColorMeta {
+  r: number;
+  g: number;
+  b: number;
+  h: number;
+  s: number;
+  v: number;
+}
+
+export const analyze = (image: string, meta?: ColorMeta, signal?: AbortSignal) =>
+  post<Analysis>("/api/analyze", { image, mediaType: "image/jpeg", meta }, signal);
 
 export interface IdeaResponse {
   name: string;
@@ -55,8 +65,46 @@ export interface IdeaResponse {
 export const idea = (body: { have: { kind: Kind; stage: Stage; qty: number }[]; pantry: string[]; avoid: string[] }, signal?: AbortSignal) =>
   post<IdeaResponse>("/api/idea", body, signal);
 
-/** Redimensiona a máx. 1280 px y JPEG 0,82: rápido de subir, suficiente para ver pintas y moho */
-export async function toJpegBase64(src: CanvasImageSource & { width?: number; height?: number }, w: number, h: number, max = 1280): Promise<string> {
+export function extractColorMeta(canvas: HTMLCanvasElement): ColorMeta {
+  const thumb = document.createElement("canvas");
+  thumb.width = 32;
+  thumb.height = 32;
+  const ctx = thumb.getContext("2d", { willReadFrequently: true });
+  if (!ctx) return { r: 128, g: 128, b: 128, h: 65, s: 50, v: 50 };
+  ctx.drawImage(canvas, 0, 0, 32, 32);
+  const data = ctx.getImageData(0, 0, 32, 32).data;
+  let totalR = 0, totalG = 0, totalB = 0, count = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    totalR += data[i];
+    totalG += data[i + 1];
+    totalB += data[i + 2];
+    count++;
+  }
+  const r = Math.round(totalR / count);
+  const g = Math.round(totalG / count);
+  const b = Math.round(totalB / count);
+
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const d = max - min;
+  let h = 0;
+  const s = max === 0 ? 0 : d / max;
+  const v = max / 255;
+  if (d !== 0) {
+    if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) * 60;
+    else if (max === g) h = ((b - r) / d + 2) * 60;
+    else h = ((r - g) / d + 4) * 60;
+  }
+  return { r, g, b, h: Math.round(h), s: Math.round(s * 100), v: Math.round(v * 100) };
+}
+
+/** Redimensiona a máx. 1280 px y JPEG 0,82 extrayendo metadatos de color */
+export async function toJpegWithMeta(
+  src: CanvasImageSource & { width?: number; height?: number },
+  w: number,
+  h: number,
+  max = 1280
+): Promise<{ image: string; meta: ColorMeta }> {
   const scale = Math.min(1, max / Math.max(w, h));
   const cw = Math.round(w * scale);
   const ch = Math.round(h * scale);
@@ -66,21 +114,33 @@ export async function toJpegBase64(src: CanvasImageSource & { width?: number; he
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new FrescaError("bad_image");
   ctx.drawImage(src, 0, 0, cw, ch);
-  return canvas.toDataURL("image/jpeg", 0.82).split(",")[1];
+  const meta = extractColorMeta(canvas);
+  const image = canvas.toDataURL("image/jpeg", 0.82).split(",")[1];
+  return { image, meta };
 }
 
-export async function fileToJpegBase64(file: File): Promise<string> {
+export async function toJpegBase64(src: CanvasImageSource & { width?: number; height?: number }, w: number, h: number, max = 1280): Promise<string> {
+  const res = await toJpegWithMeta(src, w, h, max);
+  return res.image;
+}
+
+export async function fileToJpegWithMeta(file: File): Promise<{ image: string; meta: ColorMeta }> {
   const bmp = await createImageBitmap(file).catch(() => null);
-  if (bmp) return toJpegBase64(bmp, bmp.width, bmp.height);
+  if (bmp) return toJpegWithMeta(bmp, bmp.width, bmp.height);
   const url = URL.createObjectURL(file);
   try {
     const img = new Image();
     img.src = url;
     await img.decode();
-    return toJpegBase64(img, img.naturalWidth, img.naturalHeight);
+    return toJpegWithMeta(img, img.naturalWidth, img.naturalHeight);
   } finally {
     URL.revokeObjectURL(url);
   }
+}
+
+export async function fileToJpegBase64(file: File): Promise<string> {
+  const res = await fileToJpegWithMeta(file);
+  return res.image;
 }
 
 /** Brillo medio de la imagen (0-255), para aconsejar más luz antes de gastar una consulta */

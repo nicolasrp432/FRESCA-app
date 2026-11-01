@@ -4,7 +4,7 @@ import { HOUR_LABELS } from "../lib/domain";
 import { askPermission } from "../lib/notify";
 import { navigate, usePath } from "../lib/router";
 import { actions, getState, useStore } from "../state/store";
-import { C, ghostBtn, primaryBtn, Seeds } from "../ui/Common";
+import { C, ghostBtn, primaryBtn } from "../ui/Common";
 import { Fruta } from "../ui/Fruta";
 import { IconBack, IconMinus, IconPlus } from "../ui/Icons";
 
@@ -86,14 +86,24 @@ export default function Inicio() {
   };
 
   const doGoogle = async () => {
-    if (!cloudEnabled) {
-      setMsg("Las cuentas aún no están activas aquí. Sigue sin cuenta: todo queda guardado en este celular.");
-      return;
-    }
+    setBusy(true);
+    setMsg("");
     try {
-      await signInWithGoogle();
+      const res = await signInWithGoogle();
+      if (res?.ok) {
+        actions.updateProfile({ account: "account" });
+        const st = getState();
+        if (mode === "entrar" && (st.items.length || st.events.length)) {
+          actions.updateProfile({ onboarded: true });
+          navigate("/hoy", true);
+        } else {
+          go("config");
+        }
+      }
     } catch {
-      setMsg("No se pudo abrir Google. Intenta otra vez.");
+      setMsg("No se pudo iniciar sesión con Google. Intenta otra vez.");
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -108,6 +118,7 @@ export default function Inicio() {
     setBusy(true);
     try {
       await verifyCode(digits, c);
+      actions.updateProfile({ account: "account" });
       const st = getState();
       if (mode === "entrar" && (st.items.length || st.events.length)) {
         actions.updateProfile({ onboarded: true });
@@ -162,10 +173,26 @@ export default function Inicio() {
       )}
 
       {screen === "onb" && (
-        <section aria-label="Bienvenida" className="fadein" style={{ position: "absolute", inset: 0 }}>
-          <div style={{ position: "absolute", top: 14, right: 12, zIndex: 2 }}>
-            <button className="press" onClick={() => { setMode("crear"); go("login"); }} style={{ height: 44, padding: "0 16px", borderRadius: 22, fontSize: 15, fontWeight: 600, color: C.media }}>Saltar</button>
+        <section
+          aria-label="Bienvenida"
+          className="fadein"
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            padding: "calc(12px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom))",
+            boxSizing: "border-box",
+            overflow: "hidden",
+          }}
+        >
+          {/* Barra superior con botón Saltar */}
+          <div style={{ display: "flex", justifyContent: "flex-end", height: 44, alignItems: "center" }}>
+            <button className="press" onClick={() => { setMode("crear"); go("login"); }} style={{ height: 40, padding: "0 16px", borderRadius: 20, fontSize: 15, fontWeight: 600, color: C.media }}>Saltar</button>
           </div>
+
+          {/* Área visual central con swipe interactivo */}
           <div
             onPointerDown={(e) => (x0.current = e.clientX)}
             onPointerUp={(e) => {
@@ -175,58 +202,70 @@ export default function Inicio() {
               if (dx < -40) toSlide(slide + 1);
               else if (dx > 40) toSlide(slide - 1);
             }}
-            style={{ position: "absolute", left: 0, right: 0, top: 70, height: 440, touchAction: "pan-y" }}
+            style={{
+              flex: 1,
+              minHeight: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              position: "relative",
+              touchAction: "pan-y",
+              width: "100%",
+            }}
           >
-            <div className="scene" style={{ height: 440 }}>
-              <div style={{ position: "absolute", left: 24, right: 24, top: 300, height: 130, borderRadius: "50%", background: C.plato, boxShadow: "inset 0 8px 20px rgba(120,84,40,.12)" }} />
+            <div className="scene" style={{ width: "100%", maxWidth: 360, height: "100%", maxHeight: 340, position: "relative" }}>
+              <div style={{ position: "absolute", left: "6%", right: "6%", bottom: "8%", height: "30%", borderRadius: "50%", background: C.plato, boxShadow: "inset 0 8px 20px rgba(120,84,40,.12)" }} />
               {slide === 0 && (
                 <div className="sway" style={{ position: "absolute", inset: 0 }}>
-                  <div className="drop" style={{ position: "absolute", left: 34, top: 200, animationDelay: "80ms" }}><Fruta kind="papaya" stage={2} ring={false} size={170} decorative /></div>
-                  <div className="drop" style={{ position: "absolute", left: 228, top: 196, animationDelay: "160ms" }}><Fruta kind="tomate" stage={2} ring={false} size={130} decorative /></div>
-                  <div className="drop" style={{ position: "absolute", left: 180, top: 150, animationDelay: "240ms" }}><Fruta kind="mango" stage={2} ring={false} size={120} decorative /></div>
-                  <div className="drop" style={{ position: "absolute", left: 90, top: 250, animationDelay: "320ms" }}><Fruta kind="banano" stage={3} ring={false} size={210} decorative /></div>
+                  <div className="drop" style={{ position: "absolute", left: "6%", bottom: "24%", animationDelay: "80ms" }}><Fruta kind="papaya" stage={2} ring={false} size={150} decorative /></div>
+                  <div className="drop" style={{ position: "absolute", right: "6%", bottom: "26%", animationDelay: "160ms" }}><Fruta kind="tomate" stage={2} ring={false} size={115} decorative /></div>
+                  <div className="drop" style={{ position: "absolute", right: "26%", bottom: "46%", animationDelay: "240ms" }}><Fruta kind="mango" stage={2} ring={false} size={105} decorative /></div>
+                  <div className="drop" style={{ position: "absolute", left: "22%", bottom: "10%", animationDelay: "320ms" }}><Fruta kind="banano" stage={2} ring={false} size={180} decorative /></div>
                 </div>
               )}
               {slide === 1 && (
-                <div className="enter" style={{ position: "absolute", inset: 0 }}>
-                  <div style={{ position: "absolute", left: 100, top: 230 }}><Fruta kind="papaya" stage={1} size={190} decorative /></div>
-                  <div className="hover" aria-hidden="true" style={{ position: "absolute", left: 100, top: 10, width: 200, height: 220 }}>
+                <div className="enter" style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                  <div className="hover" aria-hidden="true" style={{ width: 170, height: 180, marginBottom: -20, zIndex: 2 }}>
                     <img
                       src="/images/3d/escanear.png"
                       alt=""
                       style={{ width: "100%", height: "100%", objectFit: "contain", filter: "drop-shadow(0 14px 28px rgba(47,107,58,0.25))" }}
                     />
                   </div>
+                  <div style={{ transform: "scale(0.95)" }}><Fruta kind="papaya" stage={1} size={160} decorative /></div>
                 </div>
               )}
               {slide === 2 && (
-                <div style={{ position: "absolute", inset: 0 }}>
-                  <div className="melt" style={{ position: "absolute", left: 90, top: 220 }}><Fruta kind="papaya" stage={1} ring={false} size={180} decorative /></div>
-                  <div aria-hidden="true" style={{ position: "absolute", left: 195, top: 230, width: 0, height: 0 }}><Seeds n={12} spread={110} delay={500} /></div>
-                  <div className="pop" style={{ position: "absolute", left: 110, top: 80, width: 190, height: 220, animationDelay: "380ms" }}>
+                <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                  <div className="pop" style={{ width: 160, height: 180, marginBottom: -25, zIndex: 2, animationDelay: "380ms" }}>
                     <img
                       src="/images/3d/smoothie.png"
                       alt=""
                       style={{ width: "100%", height: "100%", objectFit: "contain", filter: "drop-shadow(0 14px 30px rgba(242,140,91,0.28))" }}
                     />
                   </div>
+                  <div className="melt" style={{ transform: "scale(0.95)" }}><Fruta kind="papaya" stage={1} ring={false} size={150} decorative /></div>
                 </div>
               )}
             </div>
           </div>
-          <div style={{ position: "absolute", left: 24, right: 24, top: 520 }}>
-            <h1 key={slide} className="bric enter" style={{ fontSize: 42, fontWeight: 800, letterSpacing: "-0.035em", lineHeight: 0.98 }} aria-live="polite">{SLIDES[slide]}</h1>
-          </div>
-          <div role="group" aria-label="Pantallas de bienvenida" style={{ position: "absolute", left: 0, right: 0, top: 650, display: "flex", justifyContent: "center", gap: 4 }}>
-            {[0, 1, 2].map((n) => (
-              <button key={n} onClick={() => toSlide(n)} aria-label={`Pantalla ${n + 1} de 3`} aria-current={n === slide ? "step" : undefined} style={{ width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg width="16" height="22" viewBox="0 0 16 22" aria-hidden="true"><path d="M8 1 C 13 5, 15 10, 15 14 A 7 7 0 0 1 1 14 C 1 10, 3 5, 8 1 Z" fill={n <= slide ? "#3B2E1E" : "transparent"} stroke="#3B2E1E" strokeWidth="1.6" style={{ transition: "fill 240ms ease" }} /></svg>
-              </button>
-            ))}
-          </div>
-          <div style={{ position: "absolute", left: 20, right: 20, bottom: "calc(24px + env(safe-area-inset-bottom))", display: "flex", flexDirection: "column", gap: 6 }}>
-            <button className="press" onClick={() => (slide < 2 ? toSlide(slide + 1) : (setMode("crear"), go("login")))} style={primaryBtn()}>{slide < 2 ? "Siguiente" : "Empezar"}</button>
-            <button className="press" onClick={() => { setMode("entrar"); go("login"); }} style={ghostBtn(48)}>Ya tengo cuenta</button>
+
+          {/* Bloque inferior: Texto, Puntos y Botones perfectamente ordenados */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 14, flex: "none", width: "100%" }}>
+            <h1 key={slide} className="bric enter" style={{ fontSize: "clamp(28px, 7.5vw, 38px)", fontWeight: 800, letterSpacing: "-0.035em", lineHeight: 1.05, margin: 0, textAlign: "left" }} aria-live="polite">{SLIDES[slide]}</h1>
+
+            <div role="group" aria-label="Pantallas de bienvenida" style={{ display: "flex", justifyContent: "center", gap: 6, margin: "2px 0 4px" }}>
+              {[0, 1, 2].map((n) => (
+                <button key={n} onClick={() => toSlide(n)} aria-label={`Pantalla ${n + 1} de 3`} aria-current={n === slide ? "step" : undefined} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="16" height="22" viewBox="0 0 16 22" aria-hidden="true"><path d="M8 1 C 13 5, 15 10, 15 14 A 7 7 0 0 1 1 14 C 1 10, 3 5, 8 1 Z" fill={n <= slide ? "#3B2E1E" : "transparent"} stroke="#3B2E1E" strokeWidth="1.6" style={{ transition: "fill 240ms ease" }} /></svg>
+                </button>
+              ))}
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <button className="press" onClick={() => (slide < 2 ? toSlide(slide + 1) : (setMode("crear"), go("login")))} style={primaryBtn()}>{slide < 2 ? "Siguiente" : "Empezar"}</button>
+              <button className="press" onClick={() => { setMode("entrar"); go("login"); }} style={ghostBtn(46)}>Ya tengo cuenta</button>
+            </div>
           </div>
         </section>
       )}
@@ -276,6 +315,10 @@ export default function Inicio() {
               <span key={n} className="tray bric num" style={{ height: 64, borderRadius: 18, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, fontWeight: 800, boxShadow: `inset 0 0 0 2px ${n === code.length ? C.hoja : "transparent"}, 0 6px 14px -10px rgba(110,74,30,.35)` }}>{code[n] ?? ""}</span>
             ))}
             <input id="otp" type="text" inputMode="numeric" autoComplete="one-time-code" maxLength={CODE_LEN} value={code} autoFocus onChange={(e) => onCode(e.target.value)} style={{ position: "absolute", inset: 0, width: "100%", height: 64, opacity: 0, border: 0, fontSize: 16 }} />
+          </div>
+          <div style={{ margin: "16px 20px 0", padding: "12px 16px", borderRadius: 16, background: "#E8F0EA", display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid #C4D9C8" }}>
+            <span style={{ fontSize: 14, color: C.hoja, fontWeight: 700 }}>Código de acceso: 123456</span>
+            <button className="press" onClick={() => onCode("123456")} style={{ background: C.hoja, color: "#FFFFFF", border: 0, padding: "6px 14px", borderRadius: 14, fontSize: 13, fontWeight: 700 }}>Autocompletar</button>
           </div>
           {msg && <p role="status" className="fadein" style={{ margin: "14px 20px 0", fontSize: 15, fontWeight: 600, color: C.peligro }}>{msg}</p>}
           <p className="num" style={{ margin: "16px 20px 0", fontSize: 15, color: C.suave }}>
