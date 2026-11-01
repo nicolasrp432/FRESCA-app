@@ -18,10 +18,46 @@ const PILE = [
 ];
 
 const REASON_ICONS: Record<TossReason, ReactElement> = {
-  danio: <svg width="40" height="40" viewBox="0 0 48 48" aria-hidden="true"><circle cx="20" cy="26" r="11" fill="#ECE8DC" /><circle cx="30" cy="20" r="8" fill="#E2DED2" /><circle cx="19" cy="24" r="1.5" fill="#A9A495" /><circle cx="28" cy="19" r="1.3" fill="#A9A495" /></svg>,
-  tiempo: <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#1F2A1E" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8" /><path d="M12 8 L 12 12 L 15 14" /></svg>,
-  nosupe: <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#1F2A1E" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 12 L 20 12 A 8 8 0 0 1 4 12 Z" /><path d="M10 6.5 A 2.2 2.2 0 1 1 12.6 8.6 L 12 9.4" /></svg>,
-  demas: <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#1F2A1E" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 10 L 20 10 L 18.4 18.4 A 2 2 0 0 1 16.4 20 L 7.6 20 A 2 2 0 0 1 5.6 18.4 Z" /><path d="M9 6 L 9 3 M12 6 L 12 2 M15 6 L 15 3" /></svg>,
+  danio: (
+    <img
+      src="/images/3d/compost.png"
+      alt="Daño"
+      style={{ width: 44, height: 44, objectFit: "contain" }}
+    />
+  ),
+  tiempo: (
+    <div
+      style={{
+        width: 44,
+        height: 44,
+        borderRadius: "50%",
+        background: "linear-gradient(135deg, #FFE4A0 0%, #F5B041 100%)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        boxShadow: "0 4px 10px rgba(245,176,65,0.3)",
+      }}
+    >
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3B2E1E" strokeWidth="2.4" strokeLinecap="round">
+        <circle cx="12" cy="12" r="8" />
+        <path d="M12 8 L 12 12 L 15 14" />
+      </svg>
+    </div>
+  ),
+  nosupe: (
+    <img
+      src="/images/3d/receta.png"
+      alt="No supe cómo usarlo"
+      style={{ width: 44, height: 44, objectFit: "contain" }}
+    />
+  ),
+  demas: (
+    <img
+      src="/images/3d/canasta.png"
+      alt="Compré de más"
+      style={{ width: 44, height: 44, objectFit: "contain" }}
+    />
+  ),
 };
 
 export default function Canasta() {
@@ -54,10 +90,15 @@ export default function Canasta() {
           </div>
 
           {empty && view === "canasto" && (
-            <div className="enter" style={{ margin: "40px 20px 0", padding: 22, borderRadius: 24, background: C.bandeja, display: "flex", flexDirection: "column", alignItems: "center", gap: 10, textAlign: "center" }}>
+            <div className="enter" style={{ margin: "30px 20px 0", padding: 24, borderRadius: 24, background: C.bandeja, display: "flex", flexDirection: "column", alignItems: "center", gap: 10, textAlign: "center" }}>
+              <img
+                src="/images/3d/canasta.png"
+                alt="Canasto vacío"
+                style={{ width: 140, height: 140, objectFit: "contain", filter: "drop-shadow(0 8px 18px rgba(70,45,20,0.18))" }}
+              />
               <span className="bric" style={{ fontSize: 24, fontWeight: 800 }}>El canasto está vacío</span>
               <span style={{ fontSize: 15, color: C.media }}>Escanea lo que tienes o agrégalo a mano.</span>
-              <div style={{ display: "flex", gap: 8 }}>
+              <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
                 <a href="#/escanear" className="press" style={{ display: "flex", alignItems: "center", gap: 6, height: 48, padding: "0 18px", borderRadius: 24, background: C.papaya, fontSize: 15, fontWeight: 700 }}><IconScan size={20} />Escanear</a>
                 <a href="#/mercar?agregar=1" className="press" style={{ display: "flex", alignItems: "center", height: 48, padding: "0 18px", borderRadius: 24, background: "#FFFFFF", fontSize: 15, fontWeight: 600 }}>A mano</a>
               </div>
@@ -66,15 +107,33 @@ export default function Canasta() {
 
           {!empty && view === "canasto" && (
             <div className="enter scene" style={{ height: 430, marginTop: 10 }}>
-              <svg aria-hidden="true" width="370" height="330" viewBox="0 0 370 330" style={{ position: "absolute", left: 10, top: 70 }}>
-                <ellipse cx="185" cy="306" rx="160" ry="16" fill="#5A3E22" opacity="0.16" />
-                <ellipse cx="185" cy="160" rx="176" ry="146" fill="#B98A52" />
-                <ellipse cx="185" cy="160" rx="176" ry="146" fill="none" stroke="#A2743E" strokeWidth="16" />
-                <ellipse cx="185" cy="164" rx="150" ry="122" fill="#9C6E3A" />
-                <g fill="none" stroke="#B58550" strokeWidth="5" opacity="0.7"><ellipse cx="185" cy="164" rx="122" ry="98" /><ellipse cx="185" cy="164" rx="92" ry="72" /><ellipse cx="185" cy="164" rx="60" ry="46" /></g>
-                <g stroke="#87592C" strokeWidth="3" opacity="0.5"><path d="M185 42 L 185 286 M35 164 L 335 164 M80 78 L 290 250 M290 78 L 80 250" /></g>
-                <ellipse cx="185" cy="160" rx="176" ry="146" fill="none" stroke="#D2A770" strokeWidth="3" strokeDasharray="10 8" />
-              </svg>
+              <div
+                style={{
+                  position: "absolute",
+                  left: "50%",
+                  top: 45,
+                  transform: "translateX(-50%)",
+                  width: 350,
+                  height: 350,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  pointerEvents: "none",
+                }}
+              >
+                <img
+                  src="/images/3d/canasta.png"
+                  alt=""
+                  loading="eager"
+                  draggable={false}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                    filter: "drop-shadow(0 16px 32px rgba(90,62,34,0.22))",
+                  }}
+                />
+              </div>
               {[...pile.keys()].reverse().map((idx) => {
                 const it = pile[idx];
                 const p = PILE[idx];

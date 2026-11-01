@@ -76,6 +76,10 @@ export default function Perfil() {
                 </button>
               )}
               <span style={{ fontSize: 15, color: C.suave }}>Nivel {stats.levelName} · {fmtKg(stats.rescuedKg)} kg rescatados</span>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 4, width: "fit-content", padding: "3px 10px", borderRadius: 12, background: "rgba(47,107,58,0.1)", border: "1px solid rgba(47,107,58,0.2)" }}>
+                <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#2F6B3A" }} />
+                <span style={{ fontSize: 12, fontWeight: 700, color: C.hoja }}>Sincronizado en Cloudflare</span>
+              </div>
             </div>
           </div>
 

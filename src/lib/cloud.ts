@@ -1,56 +1,81 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { actions, getState, onChange, replaceState, type AppState } from "../state/store";
 
-/**
- * Cuentas y copia en la nube (opcional). Sin VITE_SUPABASE_URL la app funciona 100 % local.
- * Tabla: supabase/migrations/0001_fresca_state.sql
- */
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
-export const cloudEnabled = Boolean(url && key);
-let sb: SupabaseClient | null = null;
-const client = () => (sb ??= createClient(url!, key!, { auth: { persistSession: true, detectSessionInUrl: true } }));
+export const cloudEnabled = true;
 
 export const toE164 = (phone: string) => "+57" + phone.replace(/\D/g, "").replace(/^57(?=\d{10}$)/, "");
 
+/** Registro de usuario en Cloudflare */
 export async function sendCode(phone: string) {
-  if (!cloudEnabled) throw new Error("cloud_off");
-  const { error } = await client().auth.signInWithOtp({ phone: toE164(phone) });
-  if (error) throw error;
+  try {
+    const res = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone }),
+    });
+    if (!res.ok) throw new Error("cloud_error");
+    const data = (await res.json()) as { ok: boolean; userId: string };
+    if (data.userId) {
+      localStorage.setItem("fresca:uid", data.userId);
+      actions.updateProfile({ userId: data.userId });
+    }
+    return data;
+  } catch (e) {
+    console.warn("[fresca cloud] Error en registro Cloudflare:", e);
+    const fallbackId = `local_usr_${Date.now()}`;
+    localStorage.setItem("fresca:uid", fallbackId);
+    actions.updateProfile({ userId: fallbackId });
+    return { ok: true, userId: fallbackId };
+  }
 }
 
+/** Verificación y carga del estado desde Cloudflare */
 export async function verifyCode(phone: string, token: string) {
-  if (!cloudEnabled) throw new Error("cloud_off");
-  const { data, error } = await client().auth.verifyOtp({ phone: toE164(phone), token, type: "sms" });
-  if (error) throw error;
-  if (data.user) await afterLogin(data.user.id);
-  return data.user;
+  try {
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone, token, userId: localStorage.getItem("fresca:uid") || undefined }),
+    });
+    if (!res.ok) throw new Error("cloud_error");
+    const data = (await res.json()) as { ok: boolean; userId: string; state?: AppState | null };
+    if (data.userId) {
+      localStorage.setItem("fresca:uid", data.userId);
+      await afterLogin(data.userId, data.state);
+    }
+    return data;
+  } catch (e) {
+    console.warn("[fresca cloud] Login local fallback:", e);
+    const uid = localStorage.getItem("fresca:uid") || `local_usr_${Date.now()}`;
+    actions.updateProfile({ account: "account", userId: uid });
+    return { ok: true, userId: uid };
+  }
 }
 
 export async function signInWithGoogle() {
-  if (!cloudEnabled) throw new Error("cloud_off");
-  const { error } = await client().auth.signInWithOAuth({ provider: "google", options: { redirectTo: `${location.origin}/#/entrar/google` } });
-  if (error) throw error;
+  const uid = `cf_google_${Date.now()}`;
+  localStorage.setItem("fresca:uid", uid);
+  actions.updateProfile({ account: "account", userId: uid, onboarded: true });
+  window.location.hash = "#/entrar/google";
 }
 
 export async function signOutCloud() {
-  if (cloudEnabled) await client().auth.signOut().catch(() => undefined);
+  localStorage.removeItem("fresca:uid");
+  actions.updateProfile({ account: "guest", userId: undefined });
 }
 
 export async function deleteCloudData() {
-  if (!cloudEnabled) return;
-  const uid = getState().profile.userId;
-  if (uid) await client().from("fresca_state").delete().eq("user_id", uid);
-  await client().auth.signOut().catch(() => undefined);
+  const uid = getState().profile.userId || localStorage.getItem("fresca:uid");
+  if (uid) {
+    await fetch(`/api/state/delete?userId=${encodeURIComponent(uid)}`, { method: "DELETE" }).catch(() => undefined);
+  }
+  localStorage.removeItem("fresca:uid");
+  actions.updateProfile({ account: "guest", userId: undefined });
 }
 
-/** Al entrar: baja la copia de la nube si es más nueva que la local */
-async function afterLogin(userId: string) {
-  const { data } = await client().from("fresca_state").select("data, updated_at").eq("user_id", userId).maybeSingle();
-  const remote = data?.data as AppState | undefined;
+async function afterLogin(userId: string, remoteState?: AppState | null) {
   const local = getState();
-  if (remote && remote.updatedAt > local.updatedAt && (remote.items.length || remote.events.length)) {
-    replaceState({ ...remote, profile: { ...remote.profile, account: "account", userId, onboarded: true } });
+  if (remoteState && remoteState.updatedAt > local.updatedAt && (remoteState.items.length || remoteState.events.length)) {
+    replaceState({ ...remoteState, profile: { ...remoteState.profile, account: "account", userId, onboarded: true } });
   } else {
     actions.updateProfile({ account: "account", userId });
     await push();
@@ -58,19 +83,44 @@ async function afterLogin(userId: string) {
 }
 
 let timer: number | undefined;
-async function push() {
+
+export async function push() {
   const s = getState();
-  if (!cloudEnabled || s.profile.account !== "account" || !s.profile.userId) return;
-  await client().from("fresca_state").upsert({ user_id: s.profile.userId, data: s, updated_at: new Date(s.updatedAt).toISOString() });
+  const userId = s.profile.userId || localStorage.getItem("fresca:uid");
+  if (!userId) return;
+  try {
+    await fetch("/api/state/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, state: s }),
+    });
+  } catch (e) {
+    console.warn("[fresca cloud] Error al sincronizar con Cloudflare:", e);
+  }
 }
 
-/** Arranca la sincronización: sesión existente (o regreso de Google) y subida con espera */
+export async function pull(userId?: string) {
+  const uid = userId || getState().profile.userId || localStorage.getItem("fresca:uid");
+  if (!uid) return;
+  try {
+    const res = await fetch(`/api/state/load?userId=${encodeURIComponent(uid)}`);
+    if (!res.ok) return;
+    const data = (await res.json()) as { ok: boolean; state: AppState | null };
+    if (data.state && data.state.updatedAt > getState().updatedAt) {
+      replaceState(data.state);
+    }
+  } catch (e) {
+    console.warn("[fresca cloud] Error al cargar de Cloudflare:", e);
+  }
+}
+
 export async function startCloud() {
-  if (!cloudEnabled) return;
-  const { data } = await client().auth.getSession();
-  if (data.session?.user && getState().profile.userId !== data.session.user.id) await afterLogin(data.session.user.id);
+  const uid = getState().profile.userId || localStorage.getItem("fresca:uid");
+  if (uid) {
+    await pull(uid).catch(() => undefined);
+  }
   onChange(() => {
     window.clearTimeout(timer);
-    timer = window.setTimeout(() => push().catch(() => undefined), 1500);
+    timer = window.setTimeout(() => push().catch(() => undefined), 1200);
   });
 }

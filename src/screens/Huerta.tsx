@@ -53,7 +53,7 @@ export default function Huerta() {
             {st.nextLevelName ? `Te faltan ${fmtKg(st.kgToNext)} kg para ${st.nextLevelName}.` : "Llegaste a Cosecha. ¡Qué huerta!"}
           </p>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, margin: "20px 20px 0" }}>
+          <div className="huerta-stats">
             <Stat art={<FruitPile />} value={`${fmtKg(st.rescuedKg)} kg`} label="rescatados" />
             <Stat art={<Coins />} value={`$${fmtPesos(st.pesos)}`} label="pesos ahorrados" />
             <Stat art={<Cloud />} value={`≈ ${fmtKg(st.co2)} kg`} label="de CO₂ evitado" />

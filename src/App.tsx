@@ -3,6 +3,7 @@ import { match, navigate, usePath } from "./lib/router";
 import { useStore } from "./state/store";
 import { Cargando } from "./screens/Cargando";
 import Offline from "./screens/Offline";
+import { DesktopSidebar } from "./ui/DesktopSidebar";
 
 const Inicio = lazy(() => import("./screens/Inicio"));
 const Hoy = lazy(() => import("./screens/Hoy"));
@@ -59,11 +60,17 @@ export function App() {
     else if (!onboarded && !PUBLIC.includes(clean)) navigate("/inicio", true);
   }, [path, onboarded]);
 
+  const clean = path.split("?")[0];
+  const showSidebar = onboarded && !PUBLIC.includes(clean);
+
   return (
-    <div className={`phone${flags.rm ? " rm" : ""}${flags.big ? " big" : ""}`}>
-      <Suspense fallback={<Cargando />}>
-        <Route path={path} />
-      </Suspense>
+    <div className={`app-shell${showSidebar ? " with-sidebar" : ""}${flags.rm ? " rm" : ""}${flags.big ? " big" : ""}`}>
+      {showSidebar && <DesktopSidebar currentPath={path} />}
+      <div className="main-viewport">
+        <Suspense fallback={<Cargando />}>
+          <Route path={path} />
+        </Suspense>
+      </div>
     </div>
   );
 }

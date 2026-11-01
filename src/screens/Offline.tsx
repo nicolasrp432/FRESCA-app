@@ -30,12 +30,13 @@ export default function Offline() {
     <div className="screen grain">
       <div className="scene" style={{ height: "100%" }}>
         <div style={{ position: "absolute", left: 30, right: 30, top: 380, height: 120, borderRadius: "50%", background: C.plato, boxShadow: "inset 0 8px 20px rgba(120,84,40,.12)" }} />
-        <svg className="drift" aria-hidden="true" width="170" height="110" viewBox="0 0 170 110" style={{ position: "absolute", left: 110, top: 150 }}>
-          <path d="M40 90 A 26 26 0 0 1 44 40 A 36 36 0 0 1 112 32 A 28 28 0 0 1 132 90 Z" fill="#E6E2D8" />
-          <path d="M50 60 A 14 14 0 0 1 64 48" fill="none" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" opacity="0.7" />
-          <path d="M30 20 L 140 100" stroke="#5E685A" strokeWidth="7" strokeLinecap="round" />
-          <path d="M30 20 L 140 100" stroke="#FBF7EF" strokeWidth="3" strokeLinecap="round" transform="translate(-4 4)" />
-        </svg>
+        <div className="drift" style={{ position: "absolute", left: 110, top: 140, width: 170, height: 110, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <img
+            src="/images/3d/canasta.png"
+            alt=""
+            style={{ width: 130, height: 130, objectFit: "contain", filter: "sepia(0.2) drop-shadow(0 10px 20px rgba(90,62,34,0.2))" }}
+          />
+        </div>
         <div style={{ position: "absolute", left: 60, top: 330 }}>
           {shown ? <Fruta kind={shown[0].kind} stage={currentStage(shown[0])} size={150} /> : <Fruta kind="banano" stage={2} size={150} decorative />}
         </div>

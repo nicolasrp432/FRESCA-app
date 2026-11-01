@@ -131,7 +131,19 @@ export default function Recetas() {
                       {genKinds[1] && <div className="counter" style={{ position: "absolute", left: -4, top: 44 }}><Fruta kind={genKinds[1]} stage={2} ring={false} size={42} decorative /></div>}
                       {genKinds[2] && <div className="counter" style={{ position: "absolute", left: 64, top: 44 }}><Fruta kind={genKinds[2]} stage={1} ring={false} size={48} decorative /></div>}
                     </div>
-                    <svg width="110" height="50" viewBox="0 0 110 50" aria-hidden="true" style={{ position: "absolute", left: 0, bottom: 0 }}><path d="M6 6 L 104 6 C 104 30, 82 46, 55 46 C 28 46, 6 30, 6 6 Z" fill="#E8DCC6" /><ellipse cx="55" cy="6" rx="49" ry="5" fill="#D6C7AC" /></svg>
+                    <img
+                      src="/images/3d/canasta.png"
+                      alt=""
+                      style={{
+                        width: 110,
+                        height: 75,
+                        objectFit: "contain",
+                        position: "absolute",
+                        left: 0,
+                        bottom: -6,
+                        filter: "drop-shadow(0 6px 12px rgba(70,45,20,0.18))",
+                      }}
+                    />
                   </div>
                   <span className="bric" style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em" }}>Mezclando lo que tienes…</span>
                 </div>
@@ -161,7 +173,7 @@ export default function Recetas() {
           </div>
 
           {list.length > 0 ? (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12, margin: "30px 20px 0", rowGap: 40 }}>
+            <div className="recipe-grid">
               {list.map((r, i) => (
                 <a key={r.id} href={`#/receta/${r.id}`} className="press tray enter" style={{ position: "relative", display: "flex", flexDirection: "column", gap: 4, padding: "0 12px 12px", borderRadius: 24, animationDelay: `${i * 40}ms` }}>
                   <DishArt dish={r.dish} color={r.color} topping={r.topping} size={96} style={{ margin: "-30px auto 0", display: "block" }} />
@@ -178,8 +190,12 @@ export default function Recetas() {
               ))}
             </div>
           ) : (
-            <div className="enter" style={{ margin: "18px 20px 0", padding: 18, borderRadius: 24, background: C.bandeja, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, textAlign: "center" }}>
-              <svg width="80" height="56" viewBox="0 0 120 80" aria-hidden="true"><path d="M10 20 L 110 20 C 110 52, 88 74, 60 74 C 32 74, 10 52, 10 20 Z" fill="#FFFDF6" stroke="#D8CBB4" strokeWidth="2" /><ellipse cx="60" cy="20" rx="50" ry="8" fill="#E8DCC6" /></svg>
+            <div className="enter" style={{ margin: "18px 20px 0", padding: 22, borderRadius: 24, background: C.bandeja, display: "flex", flexDirection: "column", alignItems: "center", gap: 10, textAlign: "center" }}>
+              <img
+                src="/images/3d/receta.png"
+                alt=""
+                style={{ width: 90, height: 90, objectFit: "contain", opacity: 0.7 }}
+              />
               <span style={{ fontSize: 16, fontWeight: 700 }}>Nada con esos filtros</span>
               <button className="press" onClick={() => { setPicked({}); setTags({}); }} style={{ height: 44, padding: "0 18px", borderRadius: 22, background: "#FFFFFF", fontSize: 15, fontWeight: 600, color: C.hoja }}>Quitar filtros</button>
             </div>

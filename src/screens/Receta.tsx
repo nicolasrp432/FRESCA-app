@@ -168,8 +168,13 @@ function Celebra({ result, art }: { recipe: Recipe; result: { grams: number; pes
             <span style={{ fontSize: 15, fontWeight: 600 }}>pesos ahorrados</span>
           </div>
         </div>
-        <div style={{ position: "absolute", left: 0, right: 0, top: 520, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-          <svg width="120" height="120" viewBox="0 0 80 80" aria-hidden="true"><g className="grow"><path d="M40 42 C 40 34, 40 28, 40 20" stroke="#4E8A3A" strokeWidth="3" fill="none" strokeLinecap="round" /><path d="M40 32 C 30 32, 24 26, 24 18 C 34 18, 40 24, 40 32 Z" fill="#6FAE57" /><path d="M40 25 C 48 25, 56 19, 56 11 C 46 11, 40 17, 40 25 Z" fill="#5E9E4A" /><path d="M40 20 C 36 16, 36 10, 40 6 C 44 10, 44 16, 40 20 Z" fill="#8CC46E" /></g><path d="M18 44 L 62 44 L 57 72 C 56 76, 24 76, 23 72 Z" fill="#D9784A" /><rect x="14" y="38" width="52" height="9" rx="4.5" fill="#E8895A" /><ellipse cx="40" cy="77" rx="22" ry="3" fill="#5A3E22" opacity="0.2" /></svg>
+        <div style={{ position: "absolute", left: 0, right: 0, top: 510, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+          <img
+            src="/images/3d/huerta.png"
+            alt="Matera creciendo"
+            className="grow"
+            style={{ width: 140, height: 140, objectFit: "contain", filter: "drop-shadow(0 12px 24px rgba(47,107,58,0.28))" }}
+          />
           <span style={{ fontSize: 15, fontWeight: 600 }}>{growth}</span>
         </div>
       </div>
@@ -199,13 +204,13 @@ function StepView({ step, recipe }: { step: Step; recipe: Recipe }) {
           </div>
         </>
       ) : step.action === "servir" ? (
-        <div style={{ position: "absolute", left: 95, top: 40 }}>
-          <svg aria-hidden="true" width="200" height="250" viewBox="0 0 120 150">
-            <ellipse cx="60" cy="140" rx="34" ry="6" fill="#5A3E22" opacity="0.22" />
-            <path d="M30 28 L 90 28 L 82 132 C 81 138, 39 138, 38 132 Z" fill="#FFFFFF" fillOpacity="0.6" stroke="#D8CBB4" strokeWidth="2" />
-            <g className="fillup"><path d="M34 50 L 86 50 L 81.5 128 C 80.5 133, 39.5 133, 38.5 128 Z" fill={recipe.color} /><ellipse cx="60" cy="50" rx="26" ry="6" fill="#FFFFFF" fillOpacity="0.45" /></g>
-            <path d="M40 38 L 44 120" stroke="#FFFFFF" strokeOpacity="0.8" strokeWidth="3" strokeLinecap="round" />
-          </svg>
+        <div style={{ position: "absolute", left: 115, top: 40 }}>
+          <img
+            src="/images/3d/smoothie.png"
+            alt="Servir plato"
+            className="fillup"
+            style={{ width: 160, height: 160, objectFit: "contain", filter: "drop-shadow(0 14px 28px rgba(0,0,0,0.2))" }}
+          />
         </div>
       ) : (
         <>

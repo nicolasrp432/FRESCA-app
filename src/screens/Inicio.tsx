@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { cloudEnabled, sendCode, signInWithGoogle, verifyCode } from "../lib/cloud";
+import { cloudEnabled, push, sendCode, signInWithGoogle, verifyCode } from "../lib/cloud";
 import { HOUR_LABELS } from "../lib/domain";
 import { askPermission } from "../lib/notify";
 import { navigate, usePath } from "../lib/router";
@@ -126,6 +126,7 @@ export default function Inicio() {
       const p = await askPermission();
       if (p === "denied") actions.setFlag("notif", false);
     }
+    push().catch(() => undefined);
     navigate("/hoy", true);
   };
 
@@ -189,28 +190,25 @@ export default function Inicio() {
               {slide === 1 && (
                 <div className="enter" style={{ position: "absolute", inset: 0 }}>
                   <div style={{ position: "absolute", left: 100, top: 230 }}><Fruta kind="papaya" stage={1} size={190} decorative /></div>
-                  <div className="hover" aria-hidden="true" style={{ position: "absolute", left: 120, top: 6, width: 170, height: 220 }}>
-                    <svg width="170" height="220" viewBox="0 0 170 220">
-                      <rect x="34" y="6" width="104" height="180" rx="20" fill="#1F2A1E" />
-                      <rect x="41" y="16" width="90" height="160" rx="14" fill="#3A3026" />
-                      <g className="breathe" style={{ transformOrigin: "86px 96px" }}>
-                        <path d="M52 44 L 52 34 A 6 6 0 0 1 58 28 L 68 28 M104 28 L 114 28 A 6 6 0 0 1 120 34 L 120 44 M120 148 L 120 158 A 6 6 0 0 1 114 164 L 104 164 M68 164 L 58 164 A 6 6 0 0 1 52 158 L 52 148" fill="none" stroke="#F28C5B" strokeWidth="5" strokeLinecap="round" />
-                      </g>
-                      <ellipse cx="86" cy="110" rx="26" ry="16" fill="#EE9A48" />
-                      <path d="M14 150 C 6 130, 20 112, 38 118 L 40 186 C 30 190, 18 176, 14 150 Z" fill="#D9A57E" />
-                      <path d="M136 120 C 152 112, 166 128, 160 150 C 156 170, 146 184, 134 188 Z" fill="#D9A57E" />
-                      <path d="M38 186 C 50 210, 120 212, 136 186 L 134 214 L 40 214 Z" fill="#D9A57E" />
-                      <path d="M146 130 C 150 140, 150 152, 146 162" fill="none" stroke="#B8845E" strokeWidth="2.5" strokeLinecap="round" />
-                    </svg>
+                  <div className="hover" aria-hidden="true" style={{ position: "absolute", left: 100, top: 10, width: 200, height: 220 }}>
+                    <img
+                      src="/images/3d/escanear.png"
+                      alt=""
+                      style={{ width: "100%", height: "100%", objectFit: "contain", filter: "drop-shadow(0 14px 28px rgba(47,107,58,0.25))" }}
+                    />
                   </div>
                 </div>
               )}
               {slide === 2 && (
                 <div style={{ position: "absolute", inset: 0 }}>
-                  <div className="melt" style={{ position: "absolute", left: 100, top: 230 }}><Fruta kind="papaya" stage={1} ring={false} size={190} decorative /></div>
+                  <div className="melt" style={{ position: "absolute", left: 90, top: 220 }}><Fruta kind="papaya" stage={1} ring={false} size={180} decorative /></div>
                   <div aria-hidden="true" style={{ position: "absolute", left: 195, top: 230, width: 0, height: 0 }}><Seeds n={12} spread={110} delay={500} /></div>
-                  <div className="pop" style={{ position: "absolute", left: 120, top: 120, animationDelay: "380ms" }}>
-                    <svg width="150" height="190" viewBox="0 0 120 150" aria-hidden="true"><ellipse cx="60" cy="140" rx="34" ry="6" fill="#5A3E22" opacity="0.18" /><path d="M30 28 L 90 28 L 82 132 C 81 138, 39 138, 38 132 Z" fill="#FFFFFF" fillOpacity="0.6" stroke="#D8CBB4" strokeWidth="2" /><path d="M34 50 L 86 50 L 81.5 128 C 80.5 133, 39.5 133, 38.5 128 Z" fill="#F28C5B" /><path d="M70 50 L 86 50 L 81.5 128 C 81 131, 75 132, 70 132 Z" fill="#D9703E" opacity="0.5" /><ellipse cx="60" cy="50" rx="26" ry="6" fill="#F7B48C" /><rect x="66" y="6" width="7" height="70" rx="3.5" fill="#2F6B3A" transform="rotate(12 69 40)" /><path d="M40 38 L 44 120" stroke="#FFFFFF" strokeOpacity="0.8" strokeWidth="3" strokeLinecap="round" /></svg>
+                  <div className="pop" style={{ position: "absolute", left: 110, top: 80, width: 190, height: 220, animationDelay: "380ms" }}>
+                    <img
+                      src="/images/3d/smoothie.png"
+                      alt=""
+                      style={{ width: "100%", height: "100%", objectFit: "contain", filter: "drop-shadow(0 14px 30px rgba(242,140,91,0.28))" }}
+                    />
                   </div>
                 </div>
               )}

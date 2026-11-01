@@ -65,7 +65,13 @@ El proyecto está configurado para desplegarse como un **Cloudflare Worker full-
    - **Build command**: `npm run build`
    - **Deploy command**: `npx wrangler deploy`
 
-Sin `GEMINI_API_KEY` ni `OPENROUTER_API_KEY` la app funciona completa salvo el reconocimiento por foto y las ideas nuevas: muestra "no está activo aquí" y ofrece elegir a mano. Sin `VITE_SUPABASE_*` todo se guarda en el celular y "Seguir sin cuenta" es el camino.
+Sin `GEMINI_API_KEY` ni `OPENROUTER_API_KEY` la app funciona completa salvo el reconocimiento por foto y las ideas nuevas: muestra "no está activo aquí" y ofrece elegir a mano.
+
+### Persistencia y Sincronización en Cloudflare
+El registro de usuarios y el estado completo (canasta, huerta, recetas, avisos y ajustes) se sincronizan directamente con Cloudflare mediante `/api/auth/*` y `/api/state/*` con soporte de Cloudflare KV (`FRESCA_KV`) y respaldo local en navegador.
+
+### Soporte Multi-dispositivo (Móvil y Escritorio)
+FRESCA es totalmente responsiva: en dispositivos móviles se comporta como una PWA nativa con barra inferior y gestos táctiles; en computadores y tablets de escritorio (>= 860px) se expande como un dashboard completo con navegación lateral (sidebar), vitrina de recetas en cuadrícula amplia y visualización de huerta expandida.
 
 Tests: `npm test`. Tipos: `npm run typecheck`.
 

@@ -65,6 +65,7 @@ function NavLink({ tab, active }: { tab: Exclude<Tab, null>; active: boolean }) 
 export function BottomNav({ active }: { active: Tab }) {
   return (
     <nav
+      className="mobile-bottom-nav"
       aria-label="Principal"
       style={{
         position: "absolute", left: 14, right: 14, bottom: "calc(18px + env(safe-area-inset-bottom))", height: 72, borderRadius: 28,

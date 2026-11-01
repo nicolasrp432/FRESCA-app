@@ -47,20 +47,114 @@ button:focus-visible, a:focus-visible, input:focus-visible, label:focus-within .
 }
 h1, h2, p { margin: 0; }
 
-/* Marco de la app: un teléfono en escritorio, pantalla completa en el celular */
-.phone {
+/* Shell responsivo: Mobile PWA en móviles, Dashboard completo en escritorio */
+.app-shell {
   position: relative;
   width: 100%;
-  max-width: 430px;
   height: 100dvh;
   margin: 0 auto;
   overflow: hidden;
   background: var(--meson);
   color: var(--tinta);
+  display: flex;
 }
-@media (min-width: 600px) and (min-height: 780px) {
-  body { display: flex; align-items: center; justify-content: center; }
-  .phone { height: min(900px, 100dvh - 40px); border-radius: 40px; box-shadow: 0 30px 80px -30px rgba(90, 62, 34, 0.55); }
+
+.main-viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  max-width: 440px;
+  margin: 0 auto;
+  background: var(--meson);
+}
+
+.desktop-sidebar {
+  display: none;
+}
+
+/* En pantallas de escritorio (>= 860px) */
+.recipe-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  row-gap: 40px;
+  margin: 30px 20px 0;
+}
+
+.huerta-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 20px 20px 0;
+}
+
+@media (min-width: 860px) {
+  body {
+    display: block !important;
+    overflow: hidden;
+    background: var(--meson) !important;
+  }
+  
+  .app-shell {
+    max-width: 100%;
+    height: 100dvh;
+  }
+  
+  .app-shell.with-sidebar .desktop-sidebar {
+    display: flex;
+    flex-direction: column;
+    width: 280px;
+    height: 100%;
+    background: #f7f0e4;
+    border-right: 1px solid var(--linea);
+    flex-shrink: 0;
+    padding: 24px 20px;
+    z-index: 10;
+  }
+  
+  .app-shell.with-sidebar .main-viewport {
+    max-width: 100%;
+    margin: 0;
+    flex: 1;
+    height: 100%;
+  }
+
+  /* Ocultar barra inferior móvil en desktop */
+  .mobile-bottom-nav {
+    display: none !important;
+  }
+  
+  .app-shell.with-sidebar .scroll {
+    padding-bottom: 40px !important;
+  }
+
+  .app-shell.with-sidebar .scene {
+    width: 390px;
+    margin: 0 auto;
+    position: relative;
+    left: auto;
+  }
+  
+  .app-shell.with-sidebar .zoomable {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 16px 28px;
+  }
+
+  .recipe-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+    row-gap: 48px;
+    margin: 36px 0 0;
+  }
+
+  .huerta-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin: 24px 0 0;
+  }
 }
 
 .screen { position: absolute; inset: 0; overflow: hidden; }

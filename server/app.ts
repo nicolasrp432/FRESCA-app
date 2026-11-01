@@ -2,16 +2,42 @@ import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { aiEnabled, analyzeImage, createIdea, AiError } from "./ai";
 
+export interface KvLike {
+  get(k: string): Promise<string | null>;
+  put(k: string, v: string): Promise<void>;
+  delete(k: string): Promise<void>;
+}
+
 export type Env = {
   Bindings: {
     GEMINI_API_KEY?: string;
     GOOGLE_API_KEY?: string;
     OPENROUTER_API_KEY?: string;
     FRESCA_MODEL?: string;
+    FRESCA_KV?: KvLike;
   };
 };
 
 export const app = new Hono<Env>();
+
+/* Memoria de respaldo en caso de que KV no esté vinculado aún */
+const memoryStore = new Map<string, string>();
+
+function getStorage(c: { env?: Env["Bindings"] }): KvLike {
+  const kv = c.env?.FRESCA_KV;
+  if (kv && typeof kv.get === "function" && typeof kv.put === "function") {
+    return kv;
+  }
+  return {
+    get: async (k) => memoryStore.get(k) ?? null,
+    put: async (k, v) => {
+      memoryStore.set(k, v);
+    },
+    delete: async (k) => {
+      memoryStore.delete(k);
+    },
+  };
+}
 
 /* Límite sencillo por IP: protege la cuenta de la API de abusos */
 const hits = new Map<string, { n: number; at: number }>();
@@ -48,8 +74,103 @@ function getEnvConfig(c: { env?: Env["Bindings"] }) {
 
 app.get("/api/health", (c) => {
   const { apiKey } = getEnvConfig(c);
-  return c.json({ ok: true, ai: aiEnabled(apiKey) });
+  return c.json({ ok: true, ai: aiEnabled(apiKey), cloudflare: true });
 });
+
+/* ── Persistencia y registro en Cloudflare ──────────────────── */
+
+interface RegisterBody {
+  phone?: string;
+  name?: string;
+  people?: number;
+  hour?: number;
+}
+
+interface LoginBody {
+  phone?: string;
+  userId?: string;
+}
+
+interface SaveBody {
+  userId?: string;
+  state?: {
+    updatedAt?: number;
+    [key: string]: unknown;
+  };
+}
+
+app.post("/api/auth/register", async (c) => {
+  const body = (await c.req.json<RegisterBody>().catch(() => ({}))) as RegisterBody;
+  const phoneDigits = (body.phone || "").replace(/\D/g, "");
+  const storage = getStorage(c);
+
+  let userId = "";
+  if (phoneDigits) {
+    userId = (await storage.get(`phone:${phoneDigits}`)) || "";
+  }
+  if (!userId) {
+    userId = `cf_usr_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    if (phoneDigits) await storage.put(`phone:${phoneDigits}`, userId);
+  }
+
+  const userProfile = {
+    userId,
+    phone: body.phone || "",
+    name: body.name || "",
+    people: body.people || 3,
+    hour: body.hour || 0,
+    registeredAt: Date.now(),
+  };
+  await storage.put(`user:${userId}`, JSON.stringify(userProfile));
+  return c.json({ ok: true, userId, profile: userProfile });
+});
+
+app.post("/api/auth/login", async (c) => {
+  const body = (await c.req.json<LoginBody>().catch(() => ({}))) as LoginBody;
+  const storage = getStorage(c);
+  let userId = body.userId;
+  if (!userId && body.phone) {
+    const p = body.phone.replace(/\D/g, "");
+    userId = (await storage.get(`phone:${p}`)) || undefined;
+  }
+  if (!userId) {
+    userId = `cf_usr_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    if (body.phone) await storage.put(`phone:${body.phone.replace(/\D/g, "")}`, userId);
+  }
+
+  const stateRaw = await storage.get(`state:${userId}`);
+  const state = stateRaw ? JSON.parse(stateRaw) : null;
+  return c.json({ ok: true, userId, state });
+});
+
+app.post("/api/state/save", async (c) => {
+  const body = (await c.req.json<SaveBody>().catch(() => ({}))) as SaveBody;
+  if (!body.userId || !body.state) return c.json({ error: "bad_request" }, 400);
+  const storage = getStorage(c);
+  body.state.updatedAt = Date.now();
+  await storage.put(`state:${body.userId}`, JSON.stringify(body.state));
+  return c.json({ ok: true, savedAt: body.state.updatedAt });
+});
+
+app.get("/api/state/load", async (c) => {
+  const userId = c.req.query("userId");
+  if (!userId) return c.json({ error: "missing_userId" }, 400);
+  const storage = getStorage(c);
+  const stateRaw = await storage.get(`state:${userId}`);
+  const state = stateRaw ? JSON.parse(stateRaw) : null;
+  return c.json({ ok: true, state });
+});
+
+app.delete("/api/state/delete", async (c) => {
+  const userId = c.req.query("userId");
+  if (!userId) return c.json({ error: "missing_userId" }, 400);
+  const storage = getStorage(c);
+  await storage.delete(`state:${userId}`);
+  await storage.delete(`user:${userId}`);
+  return c.json({ ok: true });
+});
+
+/* ── Visión con IA y recetas ───────────────────────────────── */
 
 app.post("/api/analyze", bodyLimit({ maxSize: 6 * 1024 * 1024 }), async (c) => {
   const { apiKey, model, provider } = getEnvConfig(c);
