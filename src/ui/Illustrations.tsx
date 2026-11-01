@@ -237,6 +237,10 @@ export function SaveArt({
   icon: "congelar" | "mermelada" | "nevera" | "salsa";
   size?: number;
 }) {
+  let src = "/images/3d/refrigerador.png";
+  if (icon === "mermelada") src = "/images/3d/receta-mermelada.png";
+  else if (icon === "salsa") src = "/images/3d/receta-hogao.png";
+
   return (
     <div
       style={{
@@ -249,16 +253,18 @@ export function SaveArt({
       }}
       aria-hidden="true"
     >
-      {icon === "congelar" || icon === "nevera" ? (
-        <Fridge />
-      ) : (
-        <img
-          src="/images/3d/smoothie.png"
-          alt=""
-          loading="lazy"
-          style={{ width: "90%", height: "90%", objectFit: "contain" }}
-        />
-      )}
+      <img
+        src={src}
+        alt=""
+        loading="lazy"
+        draggable={false}
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "contain",
+          filter: "drop-shadow(0 6px 14px rgba(60,40,20,0.18))",
+        }}
+      />
     </div>
   );
 }
@@ -351,14 +357,32 @@ export function FruitBowl() {
   );
 }
 
-export function Fridge() {
+export function Fridge({ size = 64 }: { size?: number }) {
   return (
-    <svg width="72" height="60" viewBox="0 0 90 70" aria-hidden="true">
-      <ellipse cx="45" cy="64" rx="26" ry="4" fill="#5A3E22" opacity="0.18" />
-      <rect x="24" y="4" width="42" height="58" rx="8" fill="#EAF2F4" stroke="#B9CDD3" strokeWidth="2" />
-      <path d="M24 26 L 66 26" stroke="#B9CDD3" strokeWidth="2" />
-      <path d="M30 12 L 30 20 M30 32 L 30 44" stroke="#2F6B3A" strokeWidth="3" strokeLinecap="round" />
-    </svg>
+    <div
+      style={{
+        width: size,
+        height: size,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        position: "relative",
+      }}
+      aria-hidden="true"
+    >
+      <img
+        src="/images/3d/refrigerador.png"
+        alt=""
+        loading="lazy"
+        draggable={false}
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "contain",
+          filter: "drop-shadow(0 6px 14px rgba(47,107,58,0.22))",
+        }}
+      />
+    </div>
   );
 }
 

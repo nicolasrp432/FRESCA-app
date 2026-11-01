@@ -46,6 +46,11 @@ export interface ColorMeta {
   h: number;
   s: number;
   v: number;
+  aspectRatio?: number;
+  isRound?: boolean;
+  greenRatio?: number;
+  dominant?: Kind;
+  count?: number;
 }
 
 export const analyze = (image: string, meta?: ColorMeta, signal?: AbortSignal) =>
@@ -66,36 +71,147 @@ export const idea = (body: { have: { kind: Kind; stage: Stage; qty: number }[]; 
   post<IdeaResponse>("/api/idea", body, signal);
 
 export function extractColorMeta(canvas: HTMLCanvasElement): ColorMeta {
-  const thumb = document.createElement("canvas");
-  thumb.width = 32;
-  thumb.height = 32;
-  const ctx = thumb.getContext("2d", { willReadFrequently: true });
-  if (!ctx) return { r: 128, g: 128, b: 128, h: 65, s: 50, v: 50 };
-  ctx.drawImage(canvas, 0, 0, 32, 32);
-  const data = ctx.getImageData(0, 0, 32, 32).data;
-  let totalR = 0, totalG = 0, totalB = 0, count = 0;
-  for (let i = 0; i < data.length; i += 4) {
-    totalR += data[i];
-    totalG += data[i + 1];
-    totalB += data[i + 2];
-    count++;
-  }
-  const r = Math.round(totalR / count);
-  const g = Math.round(totalG / count);
-  const b = Math.round(totalB / count);
+  const cw = canvas.width;
+  const ch = canvas.height;
+  // Región de enfoque: el visor central donde la persona enfoca el alimento
+  const rx = Math.round(cw * 0.18);
+  const ry = Math.round(ch * 0.20);
+  const rw = Math.round(cw * 0.64);
+  const rh = Math.round(ch * 0.55);
 
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
+  const thumb = document.createElement("canvas");
+  thumb.width = 64;
+  thumb.height = 64;
+  const ctx = thumb.getContext("2d", { willReadFrequently: true });
+  if (!ctx) return { r: 128, g: 128, b: 128, h: 65, s: 50, v: 50, isRound: true, aspectRatio: 1.0, dominant: "limon", count: 1 };
+
+  ctx.drawImage(canvas, rx, ry, rw, rh, 0, 0, 64, 64);
+  const imgData = ctx.getImageData(0, 0, 64, 64).data;
+
+  // Analizar píxeles vivos del alimento, descartando mesas y fondos neutros
+  let sumR = 0, sumG = 0, sumB = 0, vibrantCount = 0;
+  let minX = 64, maxX = 0, minY = 64, maxY = 0;
+  let greenPixels = 0;
+  let yellowPixels = 0;
+  let orangePixels = 0;
+  let redPixels = 0;
+  let darkGreenPixels = 0;
+
+  for (let y = 0; y < 64; y++) {
+    for (let x = 0; x < 64; x++) {
+      const idx = (y * 64 + x) * 4;
+      const r = imgData[idx];
+      const g = imgData[idx + 1];
+      const b = imgData[idx + 2];
+
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      const d = max - min;
+      const s = max === 0 ? 0 : (d / max) * 100;
+      const v = (max / 255) * 100;
+
+      // Filtrar superficies opacas o desaturadas (madera neutra, baldosas, platos)
+      if (s >= 18 && v >= 16 && max > 35) {
+        let h = 0;
+        if (d !== 0) {
+          if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) * 60;
+          else if (max === g) h = ((b - r) / d + 2) * 60;
+          else h = ((r - g) / d + 4) * 60;
+        }
+
+        sumR += r;
+        sumG += g;
+        sumB += b;
+        vibrantCount++;
+
+        minX = Math.min(minX, x);
+        maxX = Math.max(maxX, x);
+        minY = Math.min(minY, y);
+        maxY = Math.max(maxY, y);
+
+        if (h >= 62 && h <= 125) greenPixels++;
+        else if (h >= 45 && h < 62) yellowPixels++;
+        else if (h >= 22 && h < 45) orangePixels++;
+        else if (h < 22 || h > 340) redPixels++;
+        else if (h > 125 && h <= 170) darkGreenPixels++;
+      }
+    }
+  }
+
+  if (vibrantCount < 40) {
+    for (let i = 0; i < imgData.length; i += 4) {
+      sumR += imgData[i];
+      sumG += imgData[i + 1];
+      sumB += imgData[i + 2];
+      vibrantCount++;
+    }
+    minX = 10; maxX = 54; minY = 10; maxY = 54;
+  }
+
+  const avgR = Math.round(sumR / (vibrantCount || 1));
+  const avgG = Math.round(sumG / (vibrantCount || 1));
+  const avgB = Math.round(sumB / (vibrantCount || 1));
+
+  const max = Math.max(avgR, avgG, avgB);
+  const min = Math.min(avgR, avgG, avgB);
   const d = max - min;
   let h = 0;
-  const s = max === 0 ? 0 : d / max;
-  const v = max / 255;
+  const s = max === 0 ? 0 : Math.round((d / max) * 100);
+  const v = Math.round((max / 255) * 100);
   if (d !== 0) {
-    if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) * 60;
-    else if (max === g) h = ((b - r) / d + 2) * 60;
-    else h = ((r - g) / d + 4) * 60;
+    if (max === avgR) h = ((avgG - avgB) / d + (avgG < avgB ? 6 : 0)) * 60;
+    else if (max === avgG) h = ((avgB - avgR) / d + 2) * 60;
+    else h = ((avgR - avgG) / d + 4) * 60;
   }
-  return { r, g, b, h: Math.round(h), s: Math.round(s * 100), v: Math.round(v * 100) };
+  const avgH = Math.round(h);
+
+  const blobW = Math.max(1, maxX - minX);
+  const blobH = Math.max(1, maxY - minY);
+  const aspectRatio = Number((Math.max(blobW, blobH) / Math.min(blobW, blobH)).toFixed(2));
+  const isRound = aspectRatio <= 1.48;
+  const greenRatio = Number((greenPixels / (vibrantCount || 1)).toFixed(2));
+
+  // Clasificación precisa
+  let dominant: Kind = "limon";
+  let count = 1;
+
+  if (greenRatio > 0.15 || (avgH >= 50 && avgH <= 115)) {
+    // Cítrico / Limón (verde Tahití o amarillo limón)
+    dominant = "limon";
+    count = yellowPixels + greenPixels > 600 ? 2 : 1;
+  } else if ((yellowPixels > orangePixels && yellowPixels > redPixels) || (avgH >= 40 && avgH < 50)) {
+    // Si es redondo es limón amarillo / criollo; si es alargado es banano
+    if (isRound && aspectRatio < 1.45) {
+      dominant = "limon";
+      count = yellowPixels > 500 ? 2 : 1;
+    } else {
+      dominant = "banano";
+      count = 2;
+    }
+  } else if (redPixels > yellowPixels && redPixels > orangePixels) {
+    dominant = s > 65 && v < 65 ? "fresa" : "tomate";
+    count = dominant === "fresa" ? 4 : 2;
+  } else if (darkGreenPixels > 100 || (avgH >= 115 && avgH <= 170)) {
+    dominant = "aguacate";
+    count = 1;
+  } else if (orangePixels > yellowPixels) {
+    dominant = v > 68 ? "mango" : "papaya";
+    count = 1;
+  }
+
+  return {
+    r: avgR,
+    g: avgG,
+    b: avgB,
+    h: avgH,
+    s,
+    v,
+    aspectRatio,
+    isRound,
+    greenRatio,
+    dominant,
+    count,
+  };
 }
 
 /** Redimensiona a máx. 1280 px y JPEG 0,82 extrayendo metadatos de color */

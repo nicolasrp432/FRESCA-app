@@ -22,6 +22,16 @@ export const IconPlus = ({ size = 22, strokeWidth = 2.6, style }: P) => base(siz
 export const IconPhone = ({ size = 16, strokeWidth = 2, style }: P) => base(size, strokeWidth, <><rect x="8" y="3" width="8" height="18" rx="2" /><path d="M4 9 L 4 15 M20 9 L 20 15" /></>, style);
 export const IconAlert = ({ size = 14, strokeWidth = 2.6, style }: P) => base(size, strokeWidth, <path d="M12 7 L 12 13 M12 17 L 12 17.2" />, style);
 export const IconDownload = ({ size = 20, strokeWidth = 2, style }: P) => base(size, strokeWidth, <path d="M12 4 L 12 15 M7 10 L 12 15 L 17 10 M5 20 L 19 20" />, style);
+export function IconGoogle({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" style={{ flex: "none" }}>
+      <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z" />
+      <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z" />
+      <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z" />
+      <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z" />
+    </svg>
+  );
+}
 export const IconRetry = ({ size = 22, strokeWidth = 2.2, style }: P) => base(size, strokeWidth, <><path d="M4 12 A 8 8 0 1 0 7 5.8" /><path d="M4 4 L 4 9 L 9 9" /></>, style);
 export const IconSun = ({ size = 22, strokeWidth = 2.2, style }: P) => base(size, strokeWidth, <><circle cx="12" cy="12" r="4" /><path d="M12 2 L 12 4 M12 20 L 12 22 M2 12 L 4 12 M20 12 L 22 12 M5 5 L 6.5 6.5 M17.5 17.5 L 19 19 M5 19 L 6.5 17.5 M17.5 6.5 L 19 5" /></>, style);
 export const IconHand = ({ size = 24, strokeWidth = 2, style }: P) => base(size, strokeWidth, <path d="M8 13 L 8 5.5 A 1.5 1.5 0 0 1 11 5.5 L 11 11 M11 10 L 11 4 A 1.5 1.5 0 0 1 14 4 L 14 11 M14 10 L 14 5.5 A 1.5 1.5 0 0 1 17 5.5 L 17 14 C 17 18, 14.5 21, 11 21 C 8 21, 6.5 19, 5 16.5 L 3.6 14 A 1.5 1.5 0 0 1 6 12.4 L 8 15" />, style);

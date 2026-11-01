@@ -6,7 +6,7 @@ import { navigate, usePath } from "../lib/router";
 import { actions, getState, useStore } from "../state/store";
 import { C, ghostBtn, primaryBtn } from "../ui/Common";
 import { Fruta } from "../ui/Fruta";
-import { IconBack, IconMinus, IconPlus } from "../ui/Icons";
+import { IconBack, IconGoogle, IconMinus, IconPlus } from "../ui/Icons";
 
 /** Supabase manda códigos SMS de 6 números */
 const CODE_LEN = 6;
@@ -91,14 +91,8 @@ export default function Inicio() {
     try {
       const res = await signInWithGoogle();
       if (res?.ok) {
-        actions.updateProfile({ account: "account" });
-        const st = getState();
-        if (mode === "entrar" && (st.items.length || st.events.length)) {
-          actions.updateProfile({ onboarded: true });
-          navigate("/hoy", true);
-        } else {
-          go("config");
-        }
+        actions.updateProfile({ account: "account", onboarded: true });
+        navigate("/hoy", true);
       }
     } catch {
       setMsg("No se pudo iniciar sesión con Google. Intenta otra vez.");
@@ -118,12 +112,8 @@ export default function Inicio() {
     setBusy(true);
     try {
       await verifyCode(digits, c);
-      actions.updateProfile({ account: "account" });
-      const st = getState();
-      if (mode === "entrar" && (st.items.length || st.events.length)) {
-        actions.updateProfile({ onboarded: true });
-        navigate("/hoy", true);
-      } else go("config");
+      actions.updateProfile({ account: "account", onboarded: true });
+      navigate("/hoy", true);
     } catch {
       setMsg("Ese código no coincide. Revísalo o pide otro.");
     } finally {
@@ -213,18 +203,54 @@ export default function Inicio() {
               width: "100%",
             }}
           >
-            <div className="scene" style={{ width: "100%", maxWidth: 360, height: "100%", maxHeight: 340, position: "relative" }}>
-              <div style={{ position: "absolute", left: "6%", right: "6%", bottom: "8%", height: "30%", borderRadius: "50%", background: C.plato, boxShadow: "inset 0 8px 20px rgba(120,84,40,.12)" }} />
+            <div
+              style={{
+                width: "100%",
+                maxWidth: 330,
+                height: "100%",
+                maxHeight: 310,
+                position: "relative",
+                margin: "0 auto",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
               {slide === 0 && (
-                <div className="sway" style={{ position: "absolute", inset: 0 }}>
-                  <div className="drop" style={{ position: "absolute", left: "6%", bottom: "24%", animationDelay: "80ms" }}><Fruta kind="papaya" stage={2} ring={false} size={150} decorative /></div>
-                  <div className="drop" style={{ position: "absolute", right: "6%", bottom: "26%", animationDelay: "160ms" }}><Fruta kind="tomate" stage={2} ring={false} size={115} decorative /></div>
-                  <div className="drop" style={{ position: "absolute", right: "26%", bottom: "46%", animationDelay: "240ms" }}><Fruta kind="mango" stage={2} ring={false} size={105} decorative /></div>
-                  <div className="drop" style={{ position: "absolute", left: "22%", bottom: "10%", animationDelay: "320ms" }}><Fruta kind="banano" stage={2} ring={false} size={180} decorative /></div>
+                <div className="sway" style={{ position: "relative", width: 320, height: 280, margin: "0 auto" }}>
+                  {/* Plato cerámico perfectamente centrado */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 15,
+                      right: 15,
+                      bottom: 25,
+                      height: 100,
+                      borderRadius: "50%",
+                      background: C.plato,
+                      boxShadow: "inset 0 8px 20px rgba(120,84,40,.12), 0 16px 28px rgba(90,60,20,.08)",
+                    }}
+                  />
+                  {/* Papaya a la izquierda */}
+                  <div className="drop" style={{ position: "absolute", left: 16, bottom: 55, animationDelay: "80ms" }}>
+                    <Fruta kind="papaya" stage={2} ring={false} size={140} decorative />
+                  </div>
+                  {/* Mango arriba a la derecha */}
+                  <div className="drop" style={{ position: "absolute", right: 68, bottom: 125, animationDelay: "240ms" }}>
+                    <Fruta kind="mango" stage={2} ring={false} size={100} decorative />
+                  </div>
+                  {/* Tomate a la derecha */}
+                  <div className="drop" style={{ position: "absolute", right: 18, bottom: 65, animationDelay: "160ms" }}>
+                    <Fruta kind="tomate" stage={2} ring={false} size={110} decorative />
+                  </div>
+                  {/* Banano en primer plano al centro exacto */}
+                  <div className="drop" style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", bottom: 15, animationDelay: "320ms" }}>
+                    <Fruta kind="banano" stage={2} ring={false} size={175} decorative />
+                  </div>
                 </div>
               )}
               {slide === 1 && (
-                <div className="enter" style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                <div className="enter" style={{ position: "relative", width: 320, height: 280, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
                   <div className="hover" aria-hidden="true" style={{ width: 170, height: 180, marginBottom: -20, zIndex: 2 }}>
                     <img
                       src="/images/3d/escanear.png"
@@ -236,7 +262,7 @@ export default function Inicio() {
                 </div>
               )}
               {slide === 2 && (
-                <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ position: "relative", width: 320, height: 280, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
                   <div className="pop" style={{ width: 160, height: 180, marginBottom: -25, zIndex: 2, animationDelay: "380ms" }}>
                     <img
                       src="/images/3d/smoothie.png"
@@ -293,7 +319,27 @@ export default function Inicio() {
           <div style={{ margin: "20px 20px 0", display: "flex", flexDirection: "column", gap: 10 }}>
             <button className="press" onClick={doSend} disabled={digits.length < 10 || busy} style={{ height: 58, borderRadius: 29, background: digits.length >= 10 ? C.hoja : "#9DB3A0", color: "#FFFFFF", fontSize: 18, fontWeight: 700, transition: "background 200ms ease" }}>{busy ? "Enviando…" : "Enviarme el código"}</button>
             <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: C.suave }}><span style={{ flex: 1, height: 1, background: "#E2D8C6" }} />o<span style={{ flex: 1, height: 1, background: "#E2D8C6" }} /></div>
-            <button className="press" onClick={doGoogle} style={{ height: 56, borderRadius: 28, border: "2px solid #D8CBB4", background: "#FFFFFF", fontSize: 17, fontWeight: 600 }}>Continuar con Google</button>
+            <button
+              className="press"
+              onClick={doGoogle}
+              disabled={busy}
+              style={{
+                height: 56,
+                borderRadius: 28,
+                border: "2px solid #D8CBB4",
+                background: "#FFFFFF",
+                fontSize: 17,
+                fontWeight: 600,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 12,
+                boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+              }}
+            >
+              <IconGoogle size={22} />
+              <span>{busy ? "Iniciando sesión…" : "Continuar con Google"}</span>
+            </button>
             {msg && <p role="status" className="fadein" style={{ padding: "12px 14px", borderRadius: 16, background: C.bandeja, fontSize: 15, fontWeight: 600 }}>{msg}</p>}
           </div>
           <div style={{ display: "flex", justifyContent: "center", padding: "24px 0 calc(22px + env(safe-area-inset-bottom))" }}>

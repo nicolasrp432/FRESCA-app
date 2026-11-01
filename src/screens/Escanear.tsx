@@ -337,6 +337,48 @@ export default function Escanear() {
                 {visible.length === 0 && <p style={{ padding: 16, textAlign: "center", fontSize: 15, fontWeight: 600 }}>Todo a la tierra. ¡Bien hecho!</p>}
               </div>
 
+              {/* Selector rápido para confirmar o cambiar alimento con 1 toque */}
+              <div style={{ margin: "12px 14px 0", display: "flex", flexDirection: "column", gap: 6 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: C.suave }}>¿Es otro alimento? Toca para cambiar:</span>
+                <div className="hscroll" style={{ gap: 8, paddingBottom: 4 }}>
+                  {KINDS.map((k) => {
+                    const isSelected = main?.kind === k;
+                    return (
+                      <button
+                        key={k}
+                        className="press"
+                        onClick={() => {
+                          if (found && found.length > 0) {
+                            setFound((list) => list?.map((x, idx) => idx === 0 ? { ...x, kind: k, sure: true, confidence: 1 } : x) ?? null);
+                          } else {
+                            setFound([{ kind: k, count: 1, stage: 1, confidence: 1, alternative: null, damage: "ninguno", note: `${FOODS[k].name} seleccionado`, uid: `${k}-0`, sure: true }]);
+                          }
+                        }}
+                        style={{
+                          flex: "none",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                          height: 38,
+                          padding: "0 12px",
+                          borderRadius: 19,
+                          background: isSelected ? C.hoja : "#FFFFFF",
+                          color: isSelected ? "#FFFFFF" : C.tinta,
+                          border: `1.5px solid ${isSelected ? C.hoja : "#DDD3C1"}`,
+                          fontSize: 14,
+                          fontWeight: 700,
+                          boxShadow: isSelected ? "0 4px 10px rgba(47,107,58,0.2)" : "0 2px 4px rgba(0,0,0,0.03)",
+                          transition: "all 180ms ease",
+                        }}
+                      >
+                        <img src={`/images/3d/${k}.png`} alt="" style={{ width: 22, height: 22, objectFit: "contain" }} />
+                        <span>{FOODS[k].name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Indicador de impacto real y ahorro en pesos colombianos */}
               {healthy.length > 0 && (
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8, margin: "14px 12px 0" }}>
@@ -355,59 +397,110 @@ export default function Escanear() {
                 </div>
               )}
 
-              {/* Guía en tiempo real para cáscaras y desperdicios */}
-              <div style={{ margin: "14px 12px 0", padding: "14px 16px", borderRadius: 22, background: "#F5EEE4", display: "flex", flexDirection: "column", gap: 6, border: "1px solid #E4D7C5" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <img src="/images/3d/compost.png" alt="" style={{ width: 32, height: 32, objectFit: "contain" }} />
-                  <span className="bric" style={{ fontSize: 16, fontWeight: 800 }}>Aprovechamiento de desperdicios</span>
-                </div>
-                <p style={{ margin: 0, fontSize: 14, color: C.media, lineHeight: 1.4 }}>
-                  {main?.kind === "limon"
-                    ? "¡No botes las cáscaras de limón! Ralla la piel para infusiones o macéralas en vinagre blanco para un limpiador desinfectante antigrasa 100% natural."
-                    : main?.kind === "banano"
-                    ? "La cáscara de banano es rica en potasio: déjala 24h en agua y riega tus plantas, o córtala en trozos para compost rápido."
-                    : main?.kind === "aguacate"
-                    ? "La pepa y cáscara de aguacate son excelentes para abonar la tierra y aportar minerales a tus plantas."
-                    : main?.kind === "tomate"
-                    ? "Piel y semillas de tomate: sofríelas con cebolla para base de salsas o añade a caldo casero."
-                    : "Cáscaras y restos orgánicos: devuélvelos a la tierra para nutrir tus macetas y huerta comunitaria."}
-                </p>
-              </div>
-
               {main && (
                 <>
                   <h2 className="bric" style={{ margin: "26px 20px 2px", fontSize: 26, fontWeight: 800, letterSpacing: "-0.025em" }}>La escalera del rescate</h2>
                   <p style={{ margin: "0 20px", fontSize: 15, color: C.suave }}>Para {main.count > 1 || main.kind === "fresa" ? "tus" : "tu"} {(main.count > 1 || main.kind === "fresa" ? FOODS[main.kind].plural : FOODS[main.kind].name).toLowerCase()}: de lo mejor al último recurso.</p>
 
-                  <Step n={1} text="Cómetelo" active />
-                  <div className="hscroll" style={{ gap: 12, padding: "34px 20px 10px" }}>
+                  {/* ── Opción 1: Cómetelo ya ── */}
+                  <Step n={1} text="Opción 1: Cómetelo ya" active />
+                  <div className="hscroll" style={{ gap: 12, padding: "18px 20px 10px" }}>
                     {ladder.map((r) => (
-                      <a key={r.id} href={`#/receta/${r.id}`} className="press tray" style={{ flex: "none", width: 196, scrollSnapAlign: "start", borderRadius: 24, padding: "0 14px 14px", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6 }}>
-                        <img
-                          src={RECIPE_3D[r.id] || "/images/3d/receta.png"}
-                          alt=""
-                          style={{ width: 100, height: 100, objectFit: "contain", marginTop: -20, filter: "drop-shadow(0 8px 16px rgba(0,0,0,0.14))" }}
-                        />
-                        <span className="bric" style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.015em" }}>{r.name}</span>
-                        <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: C.suave }}><IconClock size={15} />{r.time}<Difficulty level={r.difficulty} /></span>
+                      <a key={r.id} href={`#/receta/${r.id}`} className="press tray" style={{ flex: "none", width: 210, scrollSnapAlign: "start", borderRadius: 24, padding: "14px", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 8, background: "#FFFFFF", border: "1px solid #EAE0D2", boxShadow: "0 4px 14px rgba(0,0,0,0.04)" }}>
+                        <div style={{ width: "100%", height: 110, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <img
+                            src={RECIPE_3D[r.id] || "/images/3d/receta.png"}
+                            alt=""
+                            style={{ maxWidth: 110, maxHeight: 110, objectFit: "contain", filter: "drop-shadow(0 10px 18px rgba(0,0,0,0.15))" }}
+                          />
+                        </div>
+                        <span className="bric" style={{ fontSize: 19, fontWeight: 800, letterSpacing: "-0.015em", lineHeight: 1.15 }}>{r.name}</span>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", fontSize: 13, color: C.suave }}>
+                          <span style={{ display: "flex", alignItems: "center", gap: 5 }}><IconClock size={14} />{r.time}</span>
+                          <Difficulty level={r.difficulty} />
+                        </div>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: C.hoja, marginTop: 2 }}>Cocinar ahora →</span>
                       </a>
                     ))}
                   </div>
 
-                  <Step n={2} text="Guárdalo para después" />
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10, margin: "0 20px" }}>
-                    {FOODS[main.kind].save.map((s) => (
-                      <div key={s.label} className="tray" style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4, padding: "12px 14px", borderRadius: 20 }}>
-                        <SaveArt icon={s.icon} />
-                        <span style={{ fontSize: 15, fontWeight: 600 }}>{s.label}</span>
+                  {/* ── Opción 2: Guárdalo para después (Nevera 3D) ── */}
+                  <Step n={2} text="Opción 2: Guárdalo para después" />
+                  <div style={{ margin: "0 20px", display: "flex", flexDirection: "column", gap: 10 }}>
+                    {/* Tarjeta destacada con el refrigerador 3D */}
+                    <div className="tray" style={{ padding: "16px", borderRadius: 24, display: "flex", alignItems: "center", gap: 16, background: "#FFFFFF", border: "1px solid #EAE0D2" }}>
+                      <div style={{ width: 84, height: 84, flex: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <img
+                          src="/images/3d/refrigerador.png"
+                          alt="Refrigerador 3D"
+                          style={{ width: "100%", height: "100%", objectFit: "contain", filter: "drop-shadow(0 8px 18px rgba(47,107,58,0.22))" }}
+                        />
                       </div>
-                    ))}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        <span style={{ fontSize: 12, fontWeight: 800, color: C.hoja, letterSpacing: "0.04em", textTransform: "uppercase" }}>Nevera y conservación</span>
+                        <span className="bric" style={{ fontSize: 17, fontWeight: 800, lineHeight: 1.2 }}>{FOODS[main.kind].storage.title}</span>
+                        <span style={{ fontSize: 14, color: C.media, lineHeight: 1.35 }}>{FOODS[main.kind].storage.tip}</span>
+                      </div>
+                    </div>
+
+                    {/* Métodos específicos de conservación */}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}>
+                      {FOODS[main.kind].save.map((s) => (
+                        <div key={s.label} className="tray" style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 8, padding: "14px", borderRadius: 20, background: "#FFFFFF", border: "1px solid #EAE0D2" }}>
+                          <SaveArt icon={s.icon} size={60} />
+                          <span style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.2 }}>{s.label}</span>
+                          <span style={{ fontSize: 12, fontWeight: 600, color: C.suave }}>{s.icon === "congelar" ? "Hasta 6 meses" : "2 a 3 semanas"}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
-                  <Step n={3} text="Devuélvelo a la tierra" />
-                  <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "0 20px", padding: "10px 14px", borderRadius: 20, background: C.bandeja }}>
-                    <Compost />
-                    <span style={{ fontSize: 15, fontWeight: 600 }}>Cáscaras a la compostera</span>
+                  {/* ── Opción 3: Devuélvelo a la tierra (Compost 3D) ── */}
+                  <Step n={3} text="Opción 3: Devuélvelo a la tierra" />
+                  <div style={{ margin: "0 20px", display: "flex", flexDirection: "column", gap: 10 }}>
+                    <div className="tray" style={{ padding: "16px", borderRadius: 24, display: "flex", alignItems: "flex-start", gap: 14, background: "#F5EEE4", border: "1px solid #E4D7C5" }}>
+                      <div style={{ width: 70, height: 70, flex: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <img src="/images/3d/compost.png" alt="Compostera 3D" style={{ width: "100%", height: "100%", objectFit: "contain", filter: "drop-shadow(0 6px 14px rgba(90,60,20,0.18))" }} />
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        <span className="bric" style={{ fontSize: 16, fontWeight: 800 }}>Cáscaras y partes que no te comas</span>
+                        <p style={{ margin: 0, fontSize: 14, color: C.media, lineHeight: 1.4 }}>
+                          {main.kind === "limon"
+                            ? "¡No botes las cáscaras de limón! Ralla la piel para infusiones o macéralas en vinagre blanco 10 días para un limpiador desinfectante antigrasa 100% natural."
+                            : main.kind === "banano"
+                            ? "La cáscara de banano es rica en potasio: ponla 24h en agua y riega tus plantas, o córtala en trozos para compost rápido."
+                            : main.kind === "aguacate"
+                            ? "La pepa y cáscara de aguacate tienen taninos y minerales: rállala para abonar macetas o ponla en agua a germinar."
+                            : main.kind === "tomate"
+                            ? "Piel y semillas de tomate: sofríelas con cebolla para salsas base o llévalas a la compostera."
+                            : "Cáscaras y restos orgánicos: devuélvelos a la tierra para nutrir tus macetas y huerta comunitaria."}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      className="press"
+                      onClick={() => {
+                        actions.logToss(main.kind, 1, "danio");
+                        setToast("¡Restos registrados para abono! +50 pts a tu huerta");
+                      }}
+                      style={{
+                        width: "100%",
+                        height: 50,
+                        borderRadius: 25,
+                        background: "#E8F0EA",
+                        color: C.hoja,
+                        border: `1.5px solid ${C.hoja}`,
+                        fontSize: 15,
+                        fontWeight: 700,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 8,
+                      }}
+                    >
+                      <img src="/images/3d/huerta.png" alt="" style={{ width: 22, height: 22, objectFit: "contain" }} />
+                      <span>Registrar restos a la huerta (+50 pts)</span>
+                    </button>
                   </div>
                 </>
               )}

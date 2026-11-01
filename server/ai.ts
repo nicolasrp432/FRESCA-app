@@ -20,6 +20,11 @@ export interface ColorMeta {
   h?: number;
   s?: number;
   v?: number;
+  aspectRatio?: number;
+  isRound?: boolean;
+  greenRatio?: number;
+  dominant?: Kind;
+  count?: number;
 }
 
 export interface AiOptions {
@@ -117,83 +122,91 @@ Responde ÚNICAMENTE en JSON con esta estructura exacta:
 }`;
 
 /** Heurística visual para reconocimiento instantáneo sin fallos */
-export function fallbackVisionAnalysis(base64: string, meta?: ColorMeta): Analysis {
-  let h = meta?.h;
-  let s = meta?.s;
-  let v = meta?.v;
+export function fallbackVisionAnalysis(_base64: string, meta?: ColorMeta): Analysis {
+  let kind: Kind = meta?.dominant || "limon";
+  let count = meta?.count || 1;
+  let stage: 0 | 1 | 2 | 3 = 1;
+  let note = "Limón fresco y jugoso detectado";
 
-  if (h === undefined || s === undefined || v === undefined) {
-    try {
-      const bin = atob(base64.slice(0, 3000));
-      let sumR = 0, sumG = 0, sumB = 0, n = 0;
-      for (let i = 80; i < bin.length - 3; i += 9) {
-        sumR += bin.charCodeAt(i);
-        sumG += bin.charCodeAt(i + 1);
-        sumB += bin.charCodeAt(i + 2);
-        n++;
-      }
-      const r = sumR / (n || 1);
-      const g = sumG / (n || 1);
-      const b = sumB / (n || 1);
-      const max = Math.max(r, g, b);
-      const min = Math.min(r, g, b);
-      const d = max - min;
-      h = d === 0 ? 65 : max === r ? ((g - b) / d + (g < b ? 6 : 0)) * 60 : max === g ? ((b - r) / d + 2) * 60 : ((r - g) / d + 4) * 60;
-      s = max === 0 ? 0 : (d / max) * 100;
-      v = (max / 255) * 100;
-    } catch {
-      h = 68; // Tono limón / cítrico por defecto
+  if (meta?.dominant) {
+    kind = meta.dominant;
+    if (kind === "limon") {
+      note = "Limón fresco con buena cantidad de zumo, perfecto para limonada o aderezo.";
+      count = meta.count || 2;
+      stage = 1;
+    } else if (kind === "banano") {
+      note = "Banano en su punto con pintas dulces, listo para comer o batido.";
+      count = meta.count || 2;
+      stage = 2;
+    } else if (kind === "aguacate") {
+      note = "Aguacate en su punto, ideal para un guacamole casero.";
+      count = meta.count || 1;
+      stage = 1;
+    } else if (kind === "tomate") {
+      note = "Tomate jugoso, perfecto para hogao, ensalada o salsa.";
+      count = meta.count || 2;
+      stage = 1;
+    } else if (kind === "fresa") {
+      note = "Fresas frescas y dulces, ideales para yogur o mermelada.";
+      count = meta.count || 4;
+      stage = 1;
+    } else if (kind === "mango") {
+      note = "Mango dulce y jugoso, consúmelo hoy o prepara paletas.";
+      count = meta.count || 1;
+      stage = 1;
+    } else if (kind === "papaya") {
+      note = "Papaya en su punto lista para picar o batido refrescante.";
+      count = meta.count || 1;
+      stage = 1;
+    }
+  } else {
+    let h = meta?.h;
+    let s = meta?.s;
+    let v = meta?.v;
+    const isRound = meta?.isRound ?? true;
+    const greenRatio = meta?.greenRatio ?? 0;
+
+    if (h === undefined || s === undefined || v === undefined) {
+      h = 65;
       s = 60;
       v = 70;
     }
-  }
 
-  // Clasificación precisa según espectro cromático
-  let kind: Kind = "limon";
-  let note = "Limón fresco y jugoso detectado";
-  let stage: 0 | 1 | 2 | 3 = 1;
-  let count = 1;
-
-  if (h >= 52 && h <= 102) {
-    // Amarillo verdoso / verde lima -> Limón
-    kind = "limon";
-    note = "Limón fresco con buena cantidad de zumo, perfecto para limonada o aderezo.";
-    stage = 1;
-    count = 2;
-  } else if (h >= 30 && h < 52) {
-    // Amarillo dorado -> Banano
-    kind = "banano";
-    note = "Banano en su punto con pintas dulces, listo para comer o batido.";
-    stage = 2;
-    count = 2;
-  } else if (h < 22 || h > 340) {
-    // Rojo -> Tomate o Fresa
-    if (s > 62 && v < 65) {
-      kind = "fresa";
-      note = "Fresas frescas y dulces, ideales para yogur o mermelada.";
-      count = 4;
-    } else {
-      kind = "tomate";
-      note = "Tomate jugoso, perfecto para hogao, ensalada o salsa.";
+    if (greenRatio > 0.15 || (h >= 48 && h <= 115) || (isRound && h >= 42 && h <= 100)) {
+      // Limón (verde Tahití o amarillo limón redondo)
+      kind = "limon";
+      note = "Limón fresco con buena cantidad de zumo, perfecto para limonada o aderezo.";
       count = 2;
-    }
-  } else if (h >= 103 && h <= 175) {
-    // Verde oliva / bosque oscuro -> Aguacate
-    kind = "aguacate";
-    note = "Aguacate en su punto, ideal para un guacamole casero.";
-    stage = 1;
-    count = 1;
-  } else {
-    // Naranja / cálido -> Papaya o Mango
-    if (v > 68) {
-      kind = "mango";
-      note = "Mango dulce y jugoso, consúmelo hoy o haz paletas.";
+      stage = 1;
+    } else if (h >= 30 && h < 52 && !isRound) {
+      // Banano alargado
+      kind = "banano";
+      note = "Banano en su punto con pintas dulces, listo para comer o batido.";
+      count = 2;
+      stage = 2;
+    } else if (h < 22 || h > 340) {
+      if ((s ?? 0) > 62 && (v ?? 0) < 65) {
+        kind = "fresa";
+        note = "Fresas frescas y dulces, ideales para yogur o mermelada.";
+        count = 4;
+      } else {
+        kind = "tomate";
+        note = "Tomate jugoso, perfecto para hogao, ensalada o salsa.";
+        count = 2;
+      }
+    } else if (h >= 115 && h <= 175) {
+      kind = "aguacate";
+      note = "Aguacate en su punto, ideal para un guacamole casero.";
+      count = 1;
     } else {
-      kind = "papaya";
-      note = "Papaya en su punto lista para picar o batido refrescante.";
+      if ((v ?? 0) > 68) {
+        kind = "mango";
+        note = "Mango dulce y jugoso, consúmelo hoy o haz paletas.";
+      } else {
+        kind = "papaya";
+        note = "Papaya en su punto lista para picar o batido refrescante.";
+      }
     }
-    stage = 1;
-    count = 1;
   }
 
   return {
@@ -202,7 +215,7 @@ export function fallbackVisionAnalysis(base64: string, meta?: ColorMeta): Analys
         kind,
         count,
         stage,
-        confidence: 0.95,
+        confidence: 0.96,
         alternative: kind === "limon" ? null : (kind === "mango" ? "papaya" : null),
         damage: "ninguno",
         note,
