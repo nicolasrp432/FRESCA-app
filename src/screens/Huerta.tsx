@@ -13,6 +13,7 @@ export default function Huerta() {
   const now = useNow();
   const events = useStore((s) => s.events);
   const name = useStore((s) => s.profile.name);
+  const avatar = useStore((s) => s.profile.avatar);
   const st = useMemo(() => computeStats(events, now), [events, now]);
   const [preview, setPreview] = useState<number | null>(null);
   const lvl = preview ?? st.level;
@@ -26,7 +27,13 @@ export default function Huerta() {
       <div className="scroll" style={{ paddingBottom: 128 }}>
         <div className="zoomable">
           <header style={{ position: "relative", padding: "22px 20px 0" }}>
-            <a href="#/perfil" className="press tray" aria-label="Tu perfil y ajustes" style={{ position: "absolute", right: 20, top: 20, width: 44, height: 44, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, fontWeight: 700 }}>{(name || "Tú").slice(0, 1).toUpperCase()}</a>
+            <a href="#/perfil" className="press tray" aria-label="Tu perfil y ajustes" style={{ position: "absolute", right: 20, top: 20, width: 44, height: 44, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, fontWeight: 700, overflow: "hidden" }}>
+              {avatar ? (
+                <img src={avatar} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ) : (
+                (name || "Tú").slice(0, 1).toUpperCase()
+              )}
+            </a>
             <h1 className="bric" style={{ fontSize: 40, fontWeight: 800, letterSpacing: "-0.035em", lineHeight: 1 }}>Tu huerta</h1>
             <p style={{ marginTop: 4, fontSize: 15, color: C.suave }}>Crece con lo que rescatas.</p>
           </header>

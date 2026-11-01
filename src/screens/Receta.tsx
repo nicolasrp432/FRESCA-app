@@ -34,7 +34,18 @@ function RecetaFlow({ recipe }: { recipe: Recipe }) {
   const pantry = useStore((s) => s.pantry);
   const held = useWakeLock(view === "paso");
   const art = (w: number, h: number, cls?: string) =>
-    recipe.dish === "glass" ? <Smoothie width={w} height={h} color={recipe.color} className={cls} /> : <DishArt dish={recipe.dish} color={recipe.color} topping={recipe.topping} size={w} style={{ display: "block" }} />;
+    recipe.dish === "glass" ? (
+      <Smoothie width={w} height={h} color={recipe.color} className={cls} />
+    ) : (
+      <DishArt
+        dish={recipe.dish}
+        recipeId={recipe.id}
+        color={recipe.color}
+        topping={recipe.topping}
+        size={w}
+        style={{ display: "block" }}
+      />
+    );
 
   const has = (kind: Kind, qty: number) => openItems(items).filter((i) => i.kind === kind).reduce((a, i) => a + i.qty, 0) >= qty;
 
@@ -191,7 +202,7 @@ function StepView({ step, recipe }: { step: Step; recipe: Recipe }) {
   return (
     <div className="enter scene" style={{ position: "absolute", top: 130, height: 520 }}>
       {step.timer ? (
-        <Timer seconds={step.timer} action={step.action} color={recipe.color} />
+        <Timer seconds={step.timer} action={step.action} color={recipe.color} recipe={recipe} />
       ) : step.action === "cortar" ? (
         <>
           <div style={{ position: "absolute", left: 30, top: 90, transform: "rotate(-8deg)" }}><Fruta kind={shown[0]} stage={2} ring={false} size={150} decorative /></div>
@@ -204,17 +215,28 @@ function StepView({ step, recipe }: { step: Step; recipe: Recipe }) {
           </div>
         </>
       ) : step.action === "servir" ? (
-        <div style={{ position: "absolute", left: 115, top: 40 }}>
-          <img
-            src="/images/3d/smoothie.png"
-            alt="Servir plato"
-            className="fillup"
-            style={{ width: 160, height: 160, objectFit: "contain", filter: "drop-shadow(0 14px 28px rgba(0,0,0,0.2))" }}
-          />
+        <div className="pop" style={{ position: "absolute", left: 110, top: 40 }}>
+          <DishArt dish={recipe.dish} recipeId={recipe.id} size={170} style={{ filter: "drop-shadow(0 14px 28px rgba(0,0,0,0.22))" }} />
         </div>
+      ) : step.action === "mezclar" ? (
+        <>
+          <div className="rock" style={{ position: "absolute", left: 115, top: 40 }}>
+            <DishArt dish={recipe.dish} recipeId={recipe.id} size={160} style={{ filter: "drop-shadow(0 12px 24px rgba(70,45,20,0.2))" }} />
+          </div>
+          <div className="drop" style={{ position: "absolute", left: 70, top: 20, animationDelay: "200ms" }}>
+            <Fruta kind={shown[0]} stage={2} ring={false} size={90} decorative />
+          </div>
+          {shown[1] && (
+            <div className="drop" style={{ position: "absolute", left: 230, top: 30, animationDelay: "360ms" }}>
+              <Fruta kind={shown[1]} stage={2} ring={false} size={80} decorative />
+            </div>
+          )}
+        </>
       ) : (
         <>
-          <div style={{ position: "absolute", left: 125, top: 30, width: 140, height: 140, borderRadius: 40, background: "rgba(255,255,255,.6)", display: "flex", alignItems: "center", justifyContent: "center" }}><ActionIcon action={step.action} size={84} /></div>
+          <div style={{ position: "absolute", left: 125, top: 30, width: 140, height: 140, borderRadius: 40, background: "rgba(255,255,255,.6)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 20px rgba(0,0,0,.08)" }}>
+            <ActionIcon action={step.action} size={84} />
+          </div>
           <div className="pop" style={{ position: "absolute", left: 60, top: 170, animationDelay: "200ms" }}><Fruta kind={shown[0]} stage={2} ring={false} size={140} decorative /></div>
           {shown[1] && <div className="pop" style={{ position: "absolute", left: 200, top: 180, animationDelay: "320ms" }}><Fruta kind={shown[1]} stage={2} ring={false} size={120} decorative /></div>}
         </>
@@ -229,7 +251,7 @@ function StepView({ step, recipe }: { step: Step; recipe: Recipe }) {
 }
 
 /** Temporizador real: anillo que se vacía, se puede pausar y avisa al terminar */
-function Timer({ seconds, action, color }: { seconds: number; action: Step["action"]; color: string }) {
+function Timer({ seconds, action, color, recipe }: { seconds: number; action: Step["action"]; color: string; recipe?: Recipe }) {
   const [left, setLeft] = useState(seconds);
   const [running, setRunning] = useState(false);
   const endAt = useRef(0);
@@ -268,6 +290,10 @@ function Timer({ seconds, action, color }: { seconds: number; action: Step["acti
             <g className={running ? "spin" : undefined}><path d="M60 158 L 100 158 M80 148 L 80 168" stroke="#7E8A7C" strokeWidth="5" strokeLinecap="round" /></g>
             <rect x="34" y="24" width="92" height="16" rx="6" fill="#2F6B3A" />
           </svg>
+        ) : action === "hornear" || action === "hervir" ? (
+          <div className={running ? "warm breathe" : undefined} style={{ width: 140, height: 140, borderRadius: 36, background: "rgba(255,255,255,.6)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 20px rgba(242,140,91,.25)" }}>
+            <DishArt dish={recipe?.dish ?? "pan"} recipeId={recipe?.id} size={110} />
+          </div>
         ) : (
           <div className={running ? "breathe" : undefined} style={{ width: 120, height: 120, borderRadius: 36, background: "rgba(255,255,255,.6)", display: "flex", alignItems: "center", justifyContent: "center" }}><ActionIcon action={action} size={76} /></div>
         )}

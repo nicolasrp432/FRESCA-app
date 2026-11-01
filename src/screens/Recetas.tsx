@@ -151,7 +151,7 @@ export default function Recetas() {
               {gen.state === "done" && (
                 <div className="pop" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <DishArt dish={gen.recipe.dish} color={gen.recipe.color} topping={gen.recipe.topping} size={84} />
+                    <DishArt dish={gen.recipe.dish} recipeId={gen.recipe.id} color={gen.recipe.color} topping={gen.recipe.topping} size={84} />
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                       <span style={{ fontSize: 13, fontWeight: 700, color: "#A04A1E" }}>Idea nueva · aún sin validar</span>
                       <span className="bric" style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1.02 }}>{gen.recipe.name}</span>
@@ -176,7 +176,7 @@ export default function Recetas() {
             <div className="recipe-grid">
               {list.map((r, i) => (
                 <a key={r.id} href={`#/receta/${r.id}`} className="press tray enter" style={{ position: "relative", display: "flex", flexDirection: "column", gap: 4, padding: "0 12px 12px", borderRadius: 24, animationDelay: `${i * 40}ms` }}>
-                  <DishArt dish={r.dish} color={r.color} topping={r.topping} size={96} style={{ margin: "-30px auto 0", display: "block" }} />
+                  <DishArt dish={r.dish} recipeId={r.id} color={r.color} topping={r.topping} size={96} style={{ margin: "-30px auto 0", display: "block" }} />
                   {r.validated && (
                     <span title="Validada por Nutrición" aria-label="Validada por Nutrición" style={{ position: "absolute", right: 10, top: 10, width: 34, height: 34, borderRadius: "50%", background: C.hoja, color: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "inset 0 0 0 3px #3D8049, 0 3px 6px rgba(31,60,30,.35)" }}><IconCheck size={16} strokeWidth={3} /></span>
                   )}

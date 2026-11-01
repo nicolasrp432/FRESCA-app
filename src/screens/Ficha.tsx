@@ -124,7 +124,7 @@ export default function Ficha({ kind: k }: { kind: string }) {
               <div className="hscroll" style={{ gap: 12, padding: "32px 20px 8px" }}>
                 {recipes.map((r) => (
                   <a key={r.id} href={`#/receta/${r.id}`} className="press tray" style={{ flex: "none", width: 150, scrollSnapAlign: "start", borderRadius: 22, padding: "0 12px 12px", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, textAlign: "center" }}>
-                    {r.dish === "glass" ? <Smoothie width={74} height={92} color={r.color} shine={false} style={{ marginTop: -26 }} /> : <DishArt dish={r.dish} color={r.color} topping={r.topping} size={92} style={{ marginTop: -24 }} />}
+                    {r.dish === "glass" ? <Smoothie width={74} height={92} color={r.color} shine={false} style={{ marginTop: -26 }} /> : <DishArt dish={r.dish} recipeId={r.id} color={r.color} topping={r.topping} size={92} style={{ marginTop: -24 }} />}
                     <span className="bric" style={{ fontSize: 17, fontWeight: 700 }}>{r.name}</span>
                   </a>
                 ))}

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { cloudEnabled, deleteCloudData, signOutCloud } from "../lib/cloud";
 import { downloadJson } from "../lib/device";
 import { computeStats, fmtKg, HOUR_LABELS } from "../lib/domain";
@@ -21,9 +21,10 @@ export default function Perfil() {
   const profile = useStore((s) => s.profile);
   const events = useStore((s) => s.events);
   const stats = useMemo(() => computeStats(events), [events]);
-  const [sheet, setSheet] = useState<"about" | "delete" | null>(null);
+  const [sheet, setSheet] = useState<"about" | "policy" | "delete" | null>(null);
   const [toast, setToast] = useState("");
   const [editing, setEditing] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const flip = async (k: keyof Flags) => {
     const on = !profile.flags[k];
@@ -35,6 +36,44 @@ export default function Perfil() {
       }
     }
     actions.setFlag(k, on);
+  };
+
+  const onPickAvatar = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const max = 200;
+        let w = img.width;
+        let h = img.height;
+        if (w > h) {
+          if (w > max) {
+            h = Math.round((h * max) / w);
+            w = max;
+          }
+        } else {
+          if (h > max) {
+            w = Math.round((w * max) / h);
+            h = max;
+          }
+        }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, w, h);
+          const base64 = canvas.toDataURL("image/jpeg", 0.82);
+          actions.updateProfile({ avatar: base64 });
+          setToast("Foto de perfil actualizada.");
+        }
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
   };
 
   const test = async () => {
@@ -62,8 +101,70 @@ export default function Perfil() {
       <div className="scroll" style={{ paddingBottom: 32 }}>
         <div className="zoomable">
           <div style={{ padding: "14px 12px 0" }}><BackButton to="/hoy" label="Volver a Hoy" /></div>
+          
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            style={{ display: "none" }}
+            onChange={onPickAvatar}
+          />
           <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "4px 20px 0" }}>
-            <PotSprout size={76} shadow />
+            <div style={{ position: "relative", flex: "none" }}>
+              <button
+                className="press"
+                onClick={() => fileRef.current?.click()}
+                aria-label="Cambiar foto de perfil"
+                style={{
+                  width: 76,
+                  height: 76,
+                  borderRadius: "50%",
+                  padding: 0,
+                  border: `3px solid ${C.plato}`,
+                  overflow: "hidden",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "#FFFFFF",
+                  boxShadow: "0 6px 14px rgba(70,45,20,0.14)",
+                }}
+              >
+                {profile.avatar ? (
+                  <img
+                    src={profile.avatar}
+                    alt="Foto de perfil"
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                ) : (
+                  <PotSprout size={72} shadow />
+                )}
+              </button>
+              <button
+                onClick={() => fileRef.current?.click()}
+                aria-label="Subir foto de perfil"
+                style={{
+                  position: "absolute",
+                  right: -2,
+                  bottom: -2,
+                  width: 28,
+                  height: 28,
+                  borderRadius: "50%",
+                  background: C.hoja,
+                  color: "#FFFFFF",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
+                  border: "2px solid #FFFFFF",
+                  cursor: "pointer",
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                  <circle cx="12" cy="13" r="4" />
+                </svg>
+              </button>
+            </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1, minWidth: 0 }}>
               {editing ? (
                 <>
@@ -82,6 +183,19 @@ export default function Perfil() {
               </div>
             </div>
           </div>
+          {profile.avatar && (
+            <div style={{ padding: "6px 20px 0" }}>
+              <button
+                onClick={() => {
+                  actions.updateProfile({ avatar: undefined });
+                  setToast("Foto de perfil eliminada.");
+                }}
+                style={{ fontSize: 13, color: C.suave, textDecoration: "underline", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+              >
+                Quitar mi foto
+              </button>
+            </div>
+          )}
 
           <p style={{ margin: "24px 24px 6px", fontSize: 14, fontWeight: 700, color: C.suave }}>Tu casa</p>
           <div style={{ margin: "0 20px", borderRadius: 22, background: "#FFFFFF", border: "1px solid #EEE6D8" }}>
@@ -125,6 +239,13 @@ export default function Perfil() {
               <span style={{ flex: 1, fontSize: 16, fontWeight: 600 }}>Descargar mis datos</span>
               <IconDownload style={{ color: C.suave }} />
             </button>
+            <button className="press" onClick={() => setSheet("policy")} style={{ ...row, borderBottom: "1px solid #EEE6D8" }}>
+              <span style={{ flex: 1, display: "flex", flexDirection: "column", gap: 1 }}>
+                <span style={{ fontSize: 16, fontWeight: 600 }}>Política de Protección de Datos</span>
+                <span style={{ fontSize: 13, color: C.suave }}>Ley 1581 de 2012, Habeas Data y Cloudflare</span>
+              </span>
+              <IconChevron style={{ color: C.suave }} />
+            </button>
             <button className="press" onClick={() => setSheet("about")} style={row}>
               <span style={{ flex: 1, display: "flex", flexDirection: "column", gap: 1 }}><span style={{ fontSize: 16, fontWeight: 600 }}>Acerca de FRESCA</span><span style={{ fontSize: 13, color: C.suave }}>Fuentes, nutrición orientativa y privacidad</span></span>
               <IconChevron style={{ color: C.suave }} />
@@ -137,6 +258,20 @@ export default function Perfil() {
           </div>
         </div>
       </div>
+
+      {sheet === "policy" && (
+        <Sheet label="Política de Protección de Datos" onClose={() => setSheet(null)}>
+          <SheetHeader title="Protección de Datos" onClose={() => setSheet(null)} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 8, fontSize: 14, lineHeight: 1.5, color: C.media, maxHeight: "65vh", overflowY: "auto", paddingRight: 4 }}>
+            <p><b style={{ color: C.tinta }}>1. Compromiso y Marco Legal:</b> En cumplimiento de la <b>Ley Estatutaria 1581 de 2012</b> y el <b>Decreto 1377 de 2013</b> de la República de Colombia, FRESCA garantiza la protección, confidencialidad y adecuado tratamiento de los datos personales de sus usuarios.</p>
+            <p><b style={{ color: C.tinta }}>2. Datos Recolectados:</b> Únicamente tratamos información necesaria para el funcionamiento de la app: nombre o apodo que elijas, número telefónico (para acceder a tu cuenta vía SMS sin contraseñas), foto de perfil opcional, y tu registro de alimentos e impacto en la huerta.</p>
+            <p><b style={{ color: C.tinta }}>3. Finalidad del Tratamiento:</b> Tus datos son utilizados exclusivamente para: (a) sincronizar tu canasta y huerta en todos tus dispositivos; (b) enviarte avisos diarios a la hora configurada; (c) calcular el ahorro económico estimado y el CO₂ evitado.</p>
+            <p><b style={{ color: C.tinta }}>4. No Comercialización ni Terceros:</b> FRESCA <b>no vende, no cede ni comparte</b> tu información personal con anunciantes ni terceras partes con fines comerciales o de mercadeo.</p>
+            <p><b style={{ color: C.tinta }}>5. Seguridad y Almacenamiento:</b> La información se resguarda mediante cifrado en tránsito (HTTPS / TLS 1.3) y almacenamiento seguro en la red perimetral de <b>Cloudflare (Workers KV)</b>, así como en la memoria local protegida de tu navegador.</p>
+            <p><b style={{ color: C.tinta }}>6. Tus Derechos (Habeas Data):</b> Tienes derecho a conocer, actualizar, rectificar y suprimir tus datos en cualquier instante. Puedes descargar una copia completa en formato JSON o presionar <i>"Borrar mi cuenta / Borrar mis datos"</i> para eliminar definitivamente toda tu información tanto local como de la nube.</p>
+          </div>
+        </Sheet>
+      )}
 
       {sheet === "about" && (
         <Sheet label="Acerca de FRESCA" onClose={() => setSheet(null)}>

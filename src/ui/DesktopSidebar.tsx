@@ -204,22 +204,36 @@ export function DesktopSidebar({ currentPath }: DesktopSidebarProps) {
           gap: 10,
         }}
       >
-        <div
-          style={{
-            width: 38,
-            height: 38,
-            borderRadius: "50%",
-            background: C.plato,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontWeight: 800,
-            fontSize: 15,
-            color: C.tinta,
-          }}
-        >
-          {profile.name ? profile.name.charAt(0).toUpperCase() : "F"}
-        </div>
+        {profile.avatar ? (
+          <img
+            src={profile.avatar}
+            alt="Perfil"
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: "50%",
+              objectFit: "cover",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.12)",
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: "50%",
+              background: C.plato,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: 800,
+              fontSize: 15,
+              color: C.tinta,
+            }}
+          >
+            {profile.name ? profile.name.charAt(0).toUpperCase() : "F"}
+          </div>
+        )}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 14, fontWeight: 700, color: C.tinta, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {profile.name || "Mi hogar"}

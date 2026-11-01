@@ -2,19 +2,43 @@ import type { CSSProperties } from "react";
 
 export type Dish = "glass" | "loaf" | "pop" | "jar" | "pan" | "bowl";
 
+const DISH_IMAGES: Record<Dish, string> = {
+  glass: "/images/3d/smoothie.png",
+  loaf: "/images/3d/receta-pan.png",
+  pop: "/images/3d/receta-paleta.png",
+  jar: "/images/3d/receta-mermelada.png",
+  pan: "/images/3d/receta-hogao.png",
+  bowl: "/images/3d/receta-guacamole.png",
+};
+
+export function getRecipeImage(dish?: Dish, recipeId?: string): string {
+  if (recipeId === "guacamole") return "/images/3d/receta-guacamole.png";
+  if (recipeId === "avena-banano") return "/images/3d/receta-avena.png";
+  if (recipeId === "hogao") return "/images/3d/receta-hogao.png";
+  if (recipeId === "mermelada-fresa") return "/images/3d/receta-mermelada.png";
+  if (recipeId === "paletas-papaya") return "/images/3d/receta-paleta.png";
+  if (recipeId === "pan-banano") return "/images/3d/receta-pan.png";
+  if (recipeId === "batido-banano" || recipeId === "jugo-papaya-fresa") return "/images/3d/smoothie.png";
+  if (dish && DISH_IMAGES[dish]) return DISH_IMAGES[dish];
+  return "/images/3d/receta.png";
+}
+
 /** Plato de receta en 3D (vitrina / detalle de receta). */
 export function DishArt({
-  dish: _dish,
+  dish,
+  recipeId,
   color: _color,
   size = 96,
   style,
 }: {
   dish?: Dish;
+  recipeId?: string;
   color?: string;
   topping?: string;
   size?: number;
   style?: CSSProperties;
 }) {
+  const imgSrc = getRecipeImage(dish, recipeId);
   return (
     <div
       style={{
@@ -30,7 +54,7 @@ export function DishArt({
       aria-hidden="true"
     >
       <img
-        src="/images/3d/receta.png"
+        src={imgSrc}
         alt=""
         loading="lazy"
         draggable={false}

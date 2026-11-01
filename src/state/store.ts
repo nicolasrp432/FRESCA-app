@@ -19,6 +19,7 @@ export interface Profile {
   onboarded: boolean;
   account: "guest" | "account";
   userId?: string;
+  avatar?: string;
 }
 
 export interface AppState {

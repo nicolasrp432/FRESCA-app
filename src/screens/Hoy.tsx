@@ -104,7 +104,7 @@ export default function Hoy() {
           {idea && urgent && (
             <div className="tray" style={{ position: "relative", display: "flex", gap: 12, alignItems: "center", margin: "34px 20px 0", padding: "0 16px 16px 8px", borderRadius: 24 }}>
               <div style={{ position: "relative", width: 110, height: 128, marginTop: -26, flex: "none", display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
-                {idea.dish === "glass" ? <Smoothie color={idea.color} /> : <DishArt dish={idea.dish} color={idea.color} topping={idea.topping} size={110} />}
+                {idea.dish === "glass" ? <Smoothie color={idea.color} /> : <DishArt dish={idea.dish} recipeId={idea.id} color={idea.color} topping={idea.topping} size={110} />}
                 <div style={{ position: "absolute", right: -8, top: -6 }}><Fruta kind={urgent.kind} stage={currentStage(urgent, now)} ring={false} size={54} decorative /></div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, paddingTop: 14 }}>
