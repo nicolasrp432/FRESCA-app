@@ -139,7 +139,7 @@ export default function Perfil() {
           <SheetHeader title="Acerca de FRESCA" onClose={() => setSheet(null)} />
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 8, fontSize: 15, lineHeight: 1.45, color: C.media }}>
             <p><b style={{ color: C.tinta }}>Madurez.</b> FRESCA estima cómo va cada alimento según los días que lleva en casa. Si no se ve así, corrígelo en su ficha: aprende de lo que le dices.</p>
-            <p><b style={{ color: C.tinta }}>Fotos.</b> La foto se manda una sola vez para reconocer los alimentos y no se guarda. El reconocimiento lo hace un modelo de IA (Claude, de Anthropic) y puede equivocarse: ante la duda, revisa.</p>
+            <p><b style={{ color: C.tinta }}>Fotos.</b> La foto se manda una sola vez para reconocer los alimentos y no se guarda. El reconocimiento lo hace un modelo de IA y puede equivocarse: ante la duda, revisa.</p>
             <p><b style={{ color: C.tinta }}>Nutrición.</b> Las cifras son orientativas, por porción típica. No reemplazan a un profesional.</p>
             <p><b style={{ color: C.tinta }}>Tus datos.</b> {cloudEnabled ? "Si tienes cuenta, tu canasta se guarda también en la nube para no perderla." : "Todo se guarda en este celular."} Puedes descargarlos o borrarlos cuando quieras.</p>
             <p><b style={{ color: C.tinta }}>Precios y CO₂.</b> Son aproximados, con precios de plaza en Colombia y ≈ 0,8 kg de CO₂ por kg de fruta que no se bota.</p>

@@ -10,12 +10,12 @@ Implementa el diseño "FRESCA · Prototipo completo" (sistema visual *arcilla de
 |---|---|
 | **Entrada** | Splash, bienvenida con deslizamiento, acceso por SMS o Google (Supabase, opcional), "Seguir sin cuenta", personas en casa, nombre y hora del aviso. |
 | **Hoy** | Plato con los 4 alimentos más urgentes según su madurez estimada, idea del día, pregunta "¿Cómo está tu…?" que corrige la estimación, kg rescatados en la semana, avisos sin leer. |
-| **Escanear** | Cámara trasera real (`getUserMedia`), linterna, foto desde galería, chequeo de luz. Claude reconoce banano, papaya, fresa, mango, tomate y aguacate, su madurez y el daño visible. |
+| **Escanear** | Cámara trasera real (`getUserMedia`), linterna, foto desde galería, chequeo de luz. La IA (Google Gemini 2.5 Flash u OpenRouter) reconoce banano, papaya, fresa, mango, tomate y aguacate, su madurez y el daño visible. |
 | **Resultado / Daño / No reconocida** | Confirmación cuando hay duda (¿papaya o mango?), escalera del rescate, "A la compostera" (queda registrado), agregar a la canasta, consejos de luz o distancia. |
 | **Ficha** | Madurez ajustable (se guarda), ideas según el punto, señales de descarte, cómo guardarlo, nutrición orientativa, recetas. |
 | **Mi canasta** | Canasto ilustrado ordenado por urgencia y lista con "Lo usé" / "Lo boté" + motivo. |
 | **Voy a mercar** | Lo que ya tienes, consejos de compra calculados con lo que se te ha botado, agregar el mercado a mano o escaneando. |
-| **Recetas** | Filtros por alimento y tipo, vitrina validada, "Créala con lo mío" (Claude crea una receta con lo que está por pasarse, marcada "aún sin validar"). |
+| **Recetas** | Filtros por alimento y tipo, vitrina validada, "Créala con lo mío" (la IA crea una receta con lo que está por pasarse, marcada "aún sin validar"). |
 | **Receta** | Ingredientes contra canasta y despensa, modo cocina con temporizador real y pantalla encendida (Wake Lock), "¿Lo hiciste?" descuenta de la canasta y celebra. |
 | **Tu huerta** | Niveles Semilla → Cosecha por kg rescatados, pesos ahorrados, CO₂ evitado, gráfica semanal, fruta estrella y la que más se escapa. |
 | **Avisos** | Generados de la canasta y del historial; notificación diaria del celular a la hora elegida. |
@@ -26,7 +26,7 @@ Implementa el diseño "FRESCA · Prototipo completo" (sistema visual *arcilla de
 
 - `src/`: React 19 + TypeScript + Vite. Sin librería de UI: el diseño se portó tal cual (tokens y hoja de movimiento en `src/styles.css`, el modelo `Fruta` en `src/ui/Fruta.tsx`).
 - `src/state/store.ts`: estado local-first en `localStorage` (canasta, historial, ajustes). `src/lib/domain.ts`: lógica pura (madurez por días, estadísticas, niveles, avisos), con tests.
-- `server/`: API mínima con Hono, `/api/analyze` (visión) y `/api/idea` (receta), con el SDK oficial de Anthropic y salidas estructuradas (Zod). La clave nunca llega al navegador. En producción también sirve `dist/`.
+- `server/`: API mínima con Hono, `/api/analyze` (visión) y `/api/idea` (receta), usando modelos gratuitos de IA (Google AI Studio Gemini o OpenRouter) y validación estructurada con Zod. La clave nunca llega al navegador. En producción también sirve `dist/`.
 - `public/sw.js`: caché de la app, aviso diario con Periodic Background Sync donde existe; tocar la notificación abre la idea.
 - `supabase/migrations/`: tabla opcional para cuentas y copia en la nube (RLS: cada persona solo ve lo suyo).
 
@@ -40,15 +40,32 @@ npm install
 cp .env.example .env
 ```
 
-Pon `ANTHROPIC_API_KEY` en `.env` para el reconocimiento y las ideas. Luego:
+Pon `GEMINI_API_KEY` (gratuita en [Google AI Studio](https://aistudio.google.com/app/apikey)) o `OPENROUTER_API_KEY` en `.env` para el reconocimiento y las ideas. Luego:
 
 ```bash
 npm run dev
 ```
 
-Web en `:5173`, API en `:8787`. Producción: `npm run build` y después `npm start` (un solo proceso en `PORT`).
+Web en `:5173`, API en `:8787`. Producción en Node: `npm run build` y después `npm start` (un solo proceso en `PORT`).
 
-Sin `ANTHROPIC_API_KEY` la app funciona completa salvo el reconocimiento por foto y las ideas nuevas: muestra "no está activo aquí" y ofrece elegir a mano. Sin `VITE_SUPABASE_*` todo se guarda en el celular y "Seguir sin cuenta" es el camino.
+### Despliegue en Cloudflare (Workers con Static Assets)
+
+El proyecto está configurado para desplegarse como un **Cloudflare Worker full-stack con Static Assets** (`wrangler.json`): sirve la PWA compilada (`dist/`) desde el CDN global y enruta `/api/*` directamente a la API Hono:
+
+1. **Variables de entorno en Cloudflare**:
+   En el panel de Cloudflare (o con `npx wrangler secret put`):
+   - `GEMINI_API_KEY`: Tu clave gratuita de Google AI Studio (o `OPENROUTER_API_KEY`).
+   - `FRESCA_MODEL`: (Opcional, por defecto `gemini-2.5-flash`).
+2. **Deploy manual o CI**:
+   ```bash
+   npm run build
+   npx wrangler deploy
+   ```
+   En Cloudflare Dashboard (conectado a Git):
+   - **Build command**: `npm run build`
+   - **Deploy command**: `npx wrangler deploy`
+
+Sin `GEMINI_API_KEY` ni `OPENROUTER_API_KEY` la app funciona completa salvo el reconocimiento por foto y las ideas nuevas: muestra "no está activo aquí" y ofrece elegir a mano. Sin `VITE_SUPABASE_*` todo se guarda en el celular y "Seguir sin cuenta" es el camino.
 
 Tests: `npm test`. Tipos: `npm run typecheck`.
 
