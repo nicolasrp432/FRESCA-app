@@ -1,0 +1,203 @@
+/* FRESCA · sistema visual "arcilla de mercado"
+   Todo pasa sobre el mesón: luz de mañana, arcilla mate y sombras de contacto.
+   El color fuerte lo ponen los alimentos. */
+
+:root {
+  --meson: #fbf7ef;
+  --tinta: #1f2a1e;
+  --hoja: #2f6b3a;
+  --hoja-claro: #eaf1e6;
+  --hoja-off: #9db3a0;
+  --papaya: #f28c5b;
+  --banano: #f2c14e;
+  --tinta-suave: #5e685a;
+  --tinta-media: #4e574b;
+  --bandeja: #f4ede1;
+  --plato: #f1e5d1;
+  --linea: #eee6d8;
+  --peligro: #a8331f;
+  --revisar: #c2412f;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: #e9e1d2;
+  color: var(--tinta);
+  font-family: Figtree, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+#root { height: 100%; }
+
+a { color: inherit; text-decoration: none; }
+a:hover { color: inherit; }
+button {
+  font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0;
+  cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+button:disabled { cursor: default; }
+input { font: inherit; color: inherit; }
+button:focus-visible, a:focus-visible, input:focus-visible, label:focus-within .sw-track {
+  outline: 3px solid var(--hoja); outline-offset: 3px;
+}
+h1, h2, p { margin: 0; }
+
+/* Marco de la app: un teléfono en escritorio, pantalla completa en el celular */
+.phone {
+  position: relative;
+  width: 100%;
+  max-width: 430px;
+  height: 100dvh;
+  margin: 0 auto;
+  overflow: hidden;
+  background: var(--meson);
+  color: var(--tinta);
+}
+@media (min-width: 600px) and (min-height: 780px) {
+  body { display: flex; align-items: center; justify-content: center; }
+  .phone { height: min(900px, 100dvh - 40px); border-radius: 40px; box-shadow: 0 30px 80px -30px rgba(90, 62, 34, 0.55); }
+}
+
+.screen { position: absolute; inset: 0; overflow: hidden; }
+.scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+/* Escenas ilustradas: se diseñaron a 390 px y se centran tal cual */
+.scene { position: relative; width: 390px; left: 50%; margin-left: -195px; }
+
+.bric { font-family: 'Bricolage Grotesque', ui-rounded, system-ui, sans-serif; }
+.num { font-variant-numeric: tabular-nums; }
+.tray {
+  background: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 12px 24px -14px rgba(110, 74, 30, 0.38), 0 2px 6px rgba(110, 74, 30, 0.07);
+}
+.grain {
+  background-color: var(--meson);
+  background-image: radial-gradient(rgba(94, 80, 50, 0.05) 1px, transparent 1.3px), radial-gradient(rgba(94, 80, 50, 0.035) 1px, transparent 1.3px);
+  background-size: 6px 6px, 9px 9px;
+  background-position: 0 0, 3px 4px;
+}
+.wood {
+  background-color: #e2bd8c;
+  background-image: repeating-linear-gradient(92deg, rgba(140, 90, 40, 0.08) 0 2px, transparent 2px 19px), repeating-linear-gradient(88deg, rgba(255, 240, 210, 0.14) 0 1px, transparent 1px 31px);
+}
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.hscroll { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.hscroll::-webkit-scrollbar { display: none; }
+
+/* Letra más grande (Perfil) */
+.big .scroll > .zoomable { zoom: 1.12; }
+
+/* ── Hoja de movimiento ─────────────────────────────── */
+.press { transition: transform 140ms var(--ease-out); }
+.press:active:not(:disabled) { transform: scale(0.96); }
+
+.enter { animation: enter 300ms var(--ease-out) backwards; }
+@keyframes enter { from { opacity: 0; transform: translateY(14px); } }
+.fadein { animation: fadein 260ms ease-out backwards; }
+@keyframes fadein { from { opacity: 0; } }
+.drop { animation: drop 820ms backwards; }
+@keyframes drop {
+  0% { transform: translateY(-150px); opacity: 0; animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45); }
+  8% { opacity: 1; }
+  52% { transform: translateY(0); animation-timing-function: cubic-bezier(0, 0.55, 0.45, 1); }
+  70% { transform: translateY(-16px); animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45); }
+  84% { transform: translateY(0); animation-timing-function: cubic-bezier(0, 0.55, 0.45, 1); }
+  92% { transform: translateY(-4px); animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45); }
+  100% { transform: translateY(0); }
+}
+.pop { animation: pop 440ms cubic-bezier(0.34, 1.4, 0.64, 1) backwards; }
+@keyframes pop { from { opacity: 0; transform: scale(0.88); } }
+.sheet { animation: sheet 460ms var(--ease-sheet) backwards; }
+@keyframes sheet { from { transform: translateY(100%); } }
+.scrim { animation: fadein 300ms ease-out backwards; }
+.breathe { animation: breathe 2.6s ease-in-out infinite; }
+@keyframes breathe { 50% { transform: scale(1.014); } }
+.draw { animation: draw 700ms var(--ease-out) backwards; }
+@keyframes draw { from { stroke-dashoffset: 100; } }
+.wave { animation: wave 1.6s linear infinite; }
+@keyframes wave { from { transform: translateY(-100%); } to { transform: translateY(330%); } }
+.liftout { animation: liftout 520ms var(--ease-out) forwards; }
+@keyframes liftout { to { opacity: 0; transform: translateY(-34px) scale(0.9); } }
+.sway { animation: sway 5s ease-in-out infinite; transform-origin: 50% 92%; }
+@keyframes sway { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+.chop { animation: chop 900ms cubic-bezier(0.77, 0, 0.175, 1) infinite; transform-origin: 85% 50%; }
+@keyframes chop { 0%, 100% { transform: translateY(-30px) rotate(-10deg); } 45% { transform: translateY(2px) rotate(0); } }
+.spin { animation: spin 480ms linear infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.fillup { animation: fillup 1.4s var(--ease-out) backwards; transform-box: fill-box; transform-origin: 50% 100%; }
+@keyframes fillup { from { transform: scaleY(0); } }
+.fuse { animation: fuse 1100ms forwards; }
+@keyframes fuse {
+  0% { opacity: 0; transform: translateY(-170px); }
+  35% { opacity: 1; transform: translateY(0); }
+  70% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(24px) scale(0.5); }
+}
+.warm { animation: warm 700ms var(--ease-out) forwards; }
+@keyframes warm { to { background-color: #fcdcc4; } }
+.seed { opacity: 0; animation: seed 1300ms var(--ease-out) forwards; }
+@keyframes seed {
+  0% { opacity: 0; transform: translate(0, 0) rotate(0) scale(0.6); }
+  12% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(260deg) scale(1); }
+}
+.grow { animation: grow 700ms var(--ease-spring) 450ms backwards; transform-box: fill-box; transform-origin: 50% 100%; }
+@keyframes grow { from { transform: scale(0.2); } }
+.stamp { animation: stamp 380ms var(--ease-spring) 300ms backwards; }
+@keyframes stamp { from { opacity: 0; transform: rotate(-8deg) scale(1.4); } }
+.ringdraw { stroke-dasharray: 100 100; animation: ringdraw 700ms var(--ease-out) 600ms backwards, ringcol 700ms ease 600ms backwards; }
+@keyframes ringdraw { from { stroke-dashoffset: 100; } }
+@keyframes ringcol { from { stroke: #6fae57; } to { stroke: #e9b530; } }
+.hover { animation: hover 2.4s ease-in-out infinite; }
+@keyframes hover { 50% { transform: translateY(-6px); } }
+.melt { animation: melt 600ms var(--ease-out) 200ms forwards; }
+@keyframes melt { to { opacity: 0; transform: scale(0.6) translateY(20px); } }
+.pile { animation: pile 520ms var(--ease-out) backwards; }
+@keyframes pile { from { opacity: 0; transform: translateY(-16px); } }
+.plant { transform-box: fill-box; transform-origin: 50% 100%; transition: transform 520ms var(--ease-spring), opacity 260ms ease; }
+.spinb { animation: spin 3.2s linear infinite; }
+.orbit { animation: spin 1.6s cubic-bezier(0.77, 0, 0.175, 1) infinite; }
+.counter { animation: spin 1.6s cubic-bezier(0.77, 0, 0.175, 1) infinite reverse; }
+.drift { animation: drift 7s ease-in-out infinite; }
+@keyframes drift { 50% { transform: translateX(10px); } }
+.roll { animation: roll 3s linear infinite backwards; }
+@keyframes roll { from { transform: translateX(-170px); } to { transform: translateX(440px); } }
+.rock { animation: rock 600ms ease-in-out infinite alternate; transform-origin: 50% 80%; }
+@keyframes rock { from { transform: rotate(-14deg); } to { transform: rotate(14deg); } }
+.huh { animation: huh 900ms var(--ease-out) 200ms both; }
+@keyframes huh { 0% { transform: scale(1) rotate(0); } 35% { transform: scale(.8) rotate(0); } 50% { transform: scale(.8) rotate(-4deg); } 65% { transform: scale(.8) rotate(3deg); } 80% { transform: scale(.8) rotate(-1.5deg); } 100% { transform: scale(.8) rotate(0); } }
+.blind { transition: transform 520ms var(--ease-sheet); }
+.slats {
+  background-color: #f4ede1;
+  background-image: repeating-linear-gradient(180deg, rgba(150, 110, 60, 0.07) 0 2px, transparent 2px 26px);
+}
+.item { animation: item 380ms var(--ease-out) backwards; }
+@keyframes item { from { opacity: 0; transform: translateY(-10px); } }
+
+/* Interruptor */
+.sw { position: relative; display: inline-flex; }
+.sw input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.knob { transition: transform 200ms var(--ease-out); }
+
+/* Rango (Ficha) */
+input[type='range'] { -webkit-appearance: none; appearance: none; width: 100%; height: 44px; background: transparent; margin: 0; }
+input[type='range']::-webkit-slider-runnable-track { height: 10px; border-radius: 5px; background: #e6dccb; }
+input[type='range']::-moz-range-track { height: 10px; border-radius: 5px; background: #e6dccb; }
+input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; width: 34px; height: 34px; margin-top: -12px; border-radius: 50%; background: #fff; border: 3px solid var(--hoja); box-shadow: 0 4px 10px rgba(110, 74, 30, 0.3); }
+input[type='range']::-moz-range-thumb { width: 28px; height: 28px; border-radius: 50%; background: #fff; border: 3px solid var(--hoja); box-shadow: 0 4px 10px rgba(110, 74, 30, 0.3); }
+
+/* Movimiento reducido: solo fundidos. Se activa por sistema o desde Perfil */
+.rm .drop, .rm .enter, .rm .pop, .rm .sheet, .rm .stamp, .rm .grow, .rm .draw, .rm .item, .rm .pile, .rm .scrim { animation: fadein 200ms ease-out backwards !important; }
+.rm .breathe, .rm .sway, .rm .chop, .rm .spin, .rm .wave, .rm .seed, .rm .fillup, .rm .hover, .rm .spinb, .rm .orbit, .rm .counter, .rm .drift, .rm .roll, .rm .rock, .rm .huh, .rm .ringdraw { animation: none !important; }
+.rm .fuse, .rm .liftout, .rm .melt { animation: none !important; opacity: 0; }
+.rm .blind, .rm .plant, .rm .knob, .rm .press { transition-duration: 1ms !important; }
+@media (prefers-reduced-motion: reduce) {
+  .drop, .enter, .pop, .sheet, .stamp, .grow, .draw, .item, .pile, .scrim { animation: fadein 200ms ease-out backwards !important; }
+  .breathe, .sway, .chop, .spin, .wave, .seed, .fillup, .hover, .spinb, .orbit, .counter, .drift, .roll, .rock, .huh, .ringdraw { animation: none !important; }
+  .fuse, .liftout, .melt { animation: none !important; opacity: 0; }
+  .blind, .plant { transition-duration: 1ms !important; }
+}
