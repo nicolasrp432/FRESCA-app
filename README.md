@@ -19,16 +19,17 @@ Implementa el diseño "FRESCA · Prototipo completo" (sistema visual *arcilla de
 | **Receta** | Ingredientes contra canasta y despensa, modo cocina con temporizador real y pantalla encendida (Wake Lock), "¿Lo hiciste?" descuenta de la canasta y celebra. |
 | **Tu huerta** | Niveles Semilla → Cosecha por kg rescatados, pesos ahorrados, CO₂ evitado, gráfica semanal, fruta estrella y la que más se escapa. |
 | **Avisos** | Generados de la canasta y del historial; notificación diaria del celular a la hora elegida. |
-| **Perfil** | Personas, hora, avisos, un solo aviso al día, menos movimiento, letra más grande, descargar o borrar datos, cerrar sesión. |
+| **Perfil** | Personas, hora, avisos, un solo aviso al día, menos movimiento, letra más grande, descargar o borrar datos, cerrar sesión y acceso a reseñas. |
+| **Reseñas y valoraciones** | Calificación interactiva con estrellas (1 a 5), etiquetas de lo que más gustó, comentarios de texto, promedio de satisfacción comunitario y persistencia en la base de datos. |
 | **Sin conexión / Cargando** | Service worker: la app y la canasta funcionan sin internet. |
 
 ## Arquitectura
 
 - `src/`: React 19 + TypeScript + Vite. Sin librería de UI: el diseño se portó tal cual (tokens y hoja de movimiento en `src/styles.css`, el modelo `Fruta` en `src/ui/Fruta.tsx`).
 - `src/state/store.ts`: estado local-first en `localStorage` (canasta, historial, ajustes). `src/lib/domain.ts`: lógica pura (madurez por días, estadísticas, niveles, avisos), con tests.
-- `server/`: API mínima con Hono, `/api/analyze` (visión) y `/api/idea` (receta), usando modelos gratuitos de IA (Google AI Studio Gemini o OpenRouter) y validación estructurada con Zod. La clave nunca llega al navegador. En producción también sirve `dist/`.
+- `server/`: API con Hono, `/api/analyze` (visión), `/api/idea` (receta) y `/api/reviews` (reseñas y valoraciones con estrellas), usando modelos gratuitos de IA (Google AI Studio Gemini o OpenRouter) y almacenamiento en Cloudflare KV / Supabase. En producción también sirve `dist/`.
 - `public/sw.js`: caché de la app, aviso diario con Periodic Background Sync donde existe; tocar la notificación abre la idea.
-- `supabase/migrations/`: tabla opcional para cuentas y copia en la nube (RLS: cada persona solo ve lo suyo).
+- `supabase/migrations/`: esquema SQL para estado en la nube (`0001_fresca_state.sql`) y tabla de reseñas con políticas RLS e índices (`0002_reviews.sql`).
 
 ## Correr
 

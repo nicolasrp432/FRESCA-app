@@ -16,6 +16,7 @@ const Recetas = lazy(() => import("./screens/Recetas"));
 const Receta = lazy(() => import("./screens/Receta"));
 const Avisos = lazy(() => import("./screens/Avisos"));
 const Perfil = lazy(() => import("./screens/Perfil"));
+const Resenas = lazy(() => import("./screens/Resenas"));
 
 const PUBLIC = ["/inicio", "/entrar/google"];
 
@@ -33,6 +34,7 @@ function Route({ path }: { path: string }) {
   if ((m = match("/receta/:id", clean))) return <Receta key={m.id} id={m.id} />;
   if (clean === "/avisos") return <Avisos />;
   if (clean === "/perfil") return <Perfil />;
+  if (clean === "/resenas") return <Resenas />;
   if (clean === "/offline") return <Offline />;
   return <Hoy />;
 }
@@ -41,7 +43,7 @@ function Route({ path }: { path: string }) {
 const SCREENS = [
   () => import("./screens/Inicio"), () => import("./screens/Hoy"), () => import("./screens/Escanear"), () => import("./screens/Ficha"),
   () => import("./screens/Canasta"), () => import("./screens/Mercar"), () => import("./screens/Huerta"), () => import("./screens/Recetas"),
-  () => import("./screens/Receta"), () => import("./screens/Avisos"), () => import("./screens/Perfil"),
+  () => import("./screens/Receta"), () => import("./screens/Avisos"), () => import("./screens/Perfil"), () => import("./screens/Resenas"),
 ];
 function warm() {
   const idle = (window as Window & { requestIdleCallback?: (cb: () => void) => void }).requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1500));

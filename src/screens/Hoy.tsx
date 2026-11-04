@@ -5,7 +5,7 @@ import { askCandidate, ideaName, itemName, plateItems, recipeFor } from "../lib/
 import { actions, useStore } from "../state/store";
 import { BottomNav, C, useNow } from "../ui/Common";
 import { Fruta } from "../ui/Fruta";
-import { Difficulty, IconBell, IconCheck, IconChevron, IconClock, IconScan } from "../ui/Icons";
+import { Difficulty, IconBell, IconCheck, IconChevron, IconClock, IconScan, IconStar } from "../ui/Icons";
 import { DishArt, PotSprout, Smoothie } from "../ui/Illustrations";
 
 /* Posiciones del plato (de la más urgente a la menos), tal cual el diseño */
@@ -157,6 +157,33 @@ export default function Hoy() {
               <span style={{ fontSize: 14, color: C.suave }}>rescatados esta semana</span>
             </div>
             <IconChevron size={22} style={{ color: C.suave }} />
+          </a>
+
+          <a
+            href="#/resenas"
+            className="press"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              margin: "14px 20px 0",
+              padding: "12px 16px",
+              borderRadius: 20,
+              background: "linear-gradient(135deg, #FFFFFF 0%, #FFF9EB 100%)",
+              border: "1px solid #EEE6D8",
+              boxShadow: "0 4px 12px rgba(110,74,30,0.04)",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ width: 34, height: 34, borderRadius: "50%", background: "rgba(233,181,48,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <IconStar size={18} filled color="#E9B530" />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: C.tinta }}>¿Te gusta FRESCA? Valóranos con estrellas</span>
+                <span style={{ fontSize: 12, color: C.suave }}>4.9 ★ · Deja tu reseña o lee las opiniones</span>
+              </div>
+            </div>
+            <IconChevron size={18} style={{ color: C.suave }} />
           </a>
         </div>
       </div>

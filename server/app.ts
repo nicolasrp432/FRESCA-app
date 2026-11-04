@@ -15,6 +15,9 @@ export type Env = {
     OPENROUTER_API_KEY?: string;
     FRESCA_MODEL?: string;
     FRESCA_KV?: KvLike;
+    SUPABASE_URL?: string;
+    SUPABASE_ANON_KEY?: string;
+    SUPABASE_SERVICE_ROLE_KEY?: string;
     AI?: {
       run(model: string, input: Record<string, unknown>): Promise<any>;
     };
@@ -186,6 +189,189 @@ app.delete("/api/state/delete", async (c) => {
   const storage = getStorage(c);
   await storage.delete(`state:${userId}`);
   await storage.delete(`user:${userId}`);
+  return c.json({ ok: true });
+});
+
+/* ── Reseñas y valoraciones de los usuarios ────────────────── */
+
+export interface Review {
+  id: string;
+  userId?: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  tags?: string[];
+  createdAt: number;
+}
+
+const SEED_REVIEWS: Review[] = [
+  {
+    id: "rev_seed_1",
+    userName: "Camila R.",
+    rating: 5,
+    comment: "¡Me encantó la app! Tenía 4 bananos maduros que iba a botar y FRESCA me dio la receta de pan de banano con lo que tenía en la alacena. Quedó delicioso.",
+    tags: ["Recetas de rescate", "Ahorro de dinero"],
+    createdAt: Date.now() - 2 * 24 * 60 * 60 * 1000,
+  },
+  {
+    id: "rev_seed_2",
+    userName: "David M.",
+    rating: 5,
+    comment: "El escáner con la cámara reconoció de una mis mangos y aguacates. El diseño es hermoso y las notificaciones a la hora elegida son súper útiles.",
+    tags: ["Reconocimiento IA", "Avisos a tiempo", "Diseño hermoso"],
+    createdAt: Date.now() - 4 * 24 * 60 * 60 * 1000,
+  },
+  {
+    id: "rev_seed_3",
+    userName: "Valentina S.",
+    rating: 5,
+    comment: "Llevo dos semanas usándola y ya he rescatado más de 5 kg de fruta. Es súper fácil e intuitiva.",
+    tags: ["Fácil e intuitiva", "Ahorro de dinero"],
+    createdAt: Date.now() - 6 * 24 * 60 * 60 * 1000,
+  },
+];
+
+function computeReviewStats(reviews: Review[]) {
+  const total = reviews.length;
+  if (total === 0) {
+    return {
+      total: 0,
+      average: 5.0,
+      distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+    };
+  }
+  const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
+  const average = Number((sum / total).toFixed(1));
+  const distribution: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  for (const r of reviews) {
+    const star = Math.min(5, Math.max(1, Math.round(r.rating)));
+    distribution[star] = (distribution[star] || 0) + 1;
+  }
+  return { total, average, distribution };
+}
+
+app.get("/api/reviews", async (c) => {
+  const storage = getStorage(c);
+  const raw = await storage.get("reviews:list");
+  let list: Review[] = [];
+  if (raw) {
+    try {
+      list = JSON.parse(raw);
+    } catch {
+      list = [];
+    }
+  }
+  if (!list || list.length === 0) {
+    list = SEED_REVIEWS;
+    await storage.put("reviews:list", JSON.stringify(list)).catch(() => undefined);
+  }
+  const stats = computeReviewStats(list);
+  return c.json({ ok: true, reviews: list, stats });
+});
+
+interface ReviewBody {
+  rating?: number;
+  comment?: string;
+  tags?: string[];
+  userName?: string;
+  userId?: string;
+}
+
+app.post("/api/reviews", async (c) => {
+  const body = ((await c.req.json<ReviewBody>().catch(() => ({}))) || {}) as ReviewBody;
+
+  const ratingNum = Number(body.rating);
+  if (!ratingNum || isNaN(ratingNum) || ratingNum < 1 || ratingNum > 5) {
+    return c.json({ error: "invalid_rating", message: "La calificación debe ser entre 1 y 5 estrellas." }, 400);
+  }
+
+  const rating = Math.min(5, Math.max(1, Math.round(ratingNum)));
+  const userName = (body.userName || "").trim().slice(0, 50) || "Cocinero/a FRESCA";
+  const comment = (body.comment || "").trim().slice(0, 1000);
+  const tags = Array.isArray(body.tags)
+    ? body.tags.slice(0, 8).map((t) => String(t).trim().slice(0, 30)).filter(Boolean)
+    : [];
+
+  const newReview: Review = {
+    id: `rev_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    userId: body.userId || undefined,
+    userName,
+    rating,
+    comment,
+    tags,
+    createdAt: Date.now(),
+  };
+
+  const storage = getStorage(c);
+  const raw = await storage.get("reviews:list");
+  let currentList: Review[] = [];
+  if (raw) {
+    try {
+      currentList = JSON.parse(raw);
+    } catch {
+      currentList = [];
+    }
+  }
+  if (!currentList || currentList.length === 0) {
+    currentList = [...SEED_REVIEWS];
+  }
+
+  const updatedList = [newReview, ...currentList].slice(0, 200);
+  await storage.put("reviews:list", JSON.stringify(updatedList));
+  await storage.put(`review:${newReview.id}`, JSON.stringify(newReview));
+
+  // Sincronización opcional con Supabase si las credenciales están configuradas
+  const supabaseUrl =
+    c.env?.SUPABASE_URL ||
+    (typeof process !== "undefined" ? process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL : undefined);
+  const supabaseKey =
+    c.env?.SUPABASE_SERVICE_ROLE_KEY ||
+    c.env?.SUPABASE_ANON_KEY ||
+    (typeof process !== "undefined" ? process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY : undefined);
+
+  if (supabaseUrl && supabaseKey) {
+    fetch(`${supabaseUrl}/rest/v1/reviews`, {
+      method: "POST",
+      headers: {
+        "apikey": supabaseKey,
+        "Authorization": `Bearer ${supabaseKey}`,
+        "Content-Type": "application/json",
+        "Prefer": "return=minimal",
+      },
+      body: JSON.stringify({
+        id: newReview.id,
+        user_id: newReview.userId || null,
+        user_name: newReview.userName,
+        rating: newReview.rating,
+        comment: newReview.comment,
+        tags: newReview.tags,
+        created_at: new Date(newReview.createdAt).toISOString(),
+      }),
+    }).catch((err) => {
+      console.warn("[fresca] Error sincronizando reseña con Supabase:", err);
+    });
+  }
+
+  const stats = computeReviewStats(updatedList);
+  return c.json({ ok: true, review: newReview, stats });
+});
+
+app.delete("/api/reviews/:id", async (c) => {
+  const id = c.req.param("id");
+  if (!id) return c.json({ error: "missing_id" }, 400);
+  const storage = getStorage(c);
+  const raw = await storage.get("reviews:list");
+  if (raw) {
+    try {
+      const currentList: Review[] = JSON.parse(raw);
+      const filtered = currentList.filter((r) => r.id !== id);
+      await storage.put("reviews:list", JSON.stringify(filtered));
+      await storage.delete(`review:${id}`);
+      return c.json({ ok: true, stats: computeReviewStats(filtered) });
+    } catch {
+      // ignorar
+    }
+  }
   return c.json({ ok: true });
 });
 

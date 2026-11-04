@@ -272,3 +272,55 @@ export function brightness(video: HTMLVideoElement): number {
   for (let i = 0; i < d.length; i += 4) sum += 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
   return sum / (d.length / 4);
 }
+
+/* ── Reseñas de la comunidad y del usuario ─────────────────── */
+
+export interface Review {
+  id: string;
+  userId?: string;
+  userName: string;
+  rating: number; // 1 a 5
+  comment: string;
+  tags?: string[];
+  createdAt: number;
+}
+
+export interface ReviewStats {
+  total: number;
+  average: number;
+  distribution: Record<number, number>;
+}
+
+export interface ReviewsResponse {
+  ok: boolean;
+  reviews: Review[];
+  stats: ReviewStats;
+}
+
+export async function fetchReviews(): Promise<ReviewsResponse> {
+  const res = await fetch("/api/reviews");
+  if (!res.ok) {
+    throw new Error("No se pudieron cargar las reseñas");
+  }
+  return res.json();
+}
+
+export async function submitReview(review: {
+  rating: number;
+  comment?: string;
+  tags?: string[];
+  userName?: string;
+  userId?: string;
+}): Promise<{ ok: boolean; review: Review; stats: ReviewStats }> {
+  const res = await fetch("/api/reviews", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(review),
+  });
+  if (!res.ok) {
+    const data = (await res.json().catch(() => ({}))) as { message?: string };
+    throw new Error(data.message || "Error al enviar la reseña");
+  }
+  return res.json();
+}
+

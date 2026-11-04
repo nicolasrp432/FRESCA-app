@@ -6,8 +6,9 @@ import { askPermission, dailyMessage, notifSupported } from "../lib/notify";
 import { navigate } from "../lib/router";
 import { actions, getState, useStore, type Flags } from "../state/store";
 import { BackButton, C, Sheet, SheetHeader, Toast } from "../ui/Common";
-import { IconChevron, IconDownload, IconMinus, IconPlus } from "../ui/Icons";
+import { IconChevron, IconDownload, IconMinus, IconPlus, IconStar } from "../ui/Icons";
 import { PotSprout } from "../ui/Illustrations";
+import { ReviewSheet } from "../ui/ReviewSheet";
 
 const TOGGLES: [keyof Flags, string, string][] = [
   ["notif", "Avisos", "Cuando algo esté por pasarse"],
@@ -22,6 +23,7 @@ export default function Perfil() {
   const events = useStore((s) => s.events);
   const stats = useMemo(() => computeStats(events), [events]);
   const [sheet, setSheet] = useState<"about" | "policy" | "delete" | "logout" | null>(null);
+  const [reviewSheetOpen, setReviewSheetOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [editing, setEditing] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -233,6 +235,38 @@ export default function Perfil() {
             <button className="press" onClick={test} style={{ margin: "8px 24px 0", minHeight: 44, fontSize: 14, fontWeight: 700, color: C.hoja }}>Probar el aviso</button>
           )}
 
+          <p style={{ margin: "22px 24px 6px", fontSize: 14, fontWeight: 700, color: C.suave }}>Tu opinión y comunidad</p>
+          <div style={{ margin: "0 20px", borderRadius: 22, background: "#FFFFFF", border: "1px solid #EEE6D8", overflow: "hidden" }}>
+            <button
+              className="press"
+              onClick={() => setReviewSheetOpen(true)}
+              style={{ ...row, borderBottom: "1px solid #EEE6D8" }}
+            >
+              <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(233,181,48,0.18)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <IconStar size={20} filled color="#E9B530" />
+              </div>
+              <span style={{ flex: 1, display: "flex", flexDirection: "column", gap: 1 }}>
+                <span style={{ fontSize: 16, fontWeight: 600 }}>Dejar una reseña con estrellas</span>
+                <span style={{ fontSize: 13, color: C.suave }}>Guarda tu valoración en la base de datos</span>
+              </span>
+              <IconChevron style={{ color: C.suave }} />
+            </button>
+            <button
+              className="press"
+              onClick={() => navigate("/resenas")}
+              style={row}
+            >
+              <div style={{ width: 36, height: 36, borderRadius: "50%", background: C.hojaClaro, color: C.hoja, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontWeight: 800, fontSize: 13 }}>
+                4.9★
+              </div>
+              <span style={{ flex: 1, display: "flex", flexDirection: "column", gap: 1 }}>
+                <span style={{ fontSize: 16, fontWeight: 600 }}>Ver reseñas de la comunidad</span>
+                <span style={{ fontSize: 13, color: C.suave }}>Opiniones de otros cocineros de FRESCA</span>
+              </span>
+              <IconChevron style={{ color: C.suave }} />
+            </button>
+          </div>
+
           <p style={{ margin: "22px 24px 6px", fontSize: 14, fontWeight: 700, color: C.suave }}>Tus datos</p>
           <div style={{ margin: "0 20px", borderRadius: 22, background: "#FFFFFF", border: "1px solid #EEE6D8" }}>
             <button className="press" onClick={() => downloadJson(`fresca-${new Date().toISOString().slice(0, 10)}.json`, getState())} style={{ ...row, borderBottom: "1px solid #EEE6D8" }}>
@@ -359,6 +393,15 @@ export default function Perfil() {
             <button className="press" onClick={() => setSheet(null)} style={{ height: 52, borderRadius: 26, fontSize: 16, fontWeight: 600, color: C.media }}>Mejor no</button>
           </div>
         </Sheet>
+      )}
+
+      {reviewSheetOpen && (
+        <ReviewSheet
+          onClose={() => setReviewSheetOpen(false)}
+          onSuccess={() => {
+            setToast("¡Gracias! Tu reseña ha sido guardada en la base de datos.");
+          }}
+        />
       )}
     </div>
   );

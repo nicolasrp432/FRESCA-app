@@ -1,5 +1,5 @@
 import { C } from "./Common";
-import { IconBasket, IconBell, IconScan } from "./Icons";
+import { IconBasket, IconBell, IconScan, IconStar } from "./Icons";
 import { useStore } from "../state/store";
 
 interface DesktopSidebarProps {
@@ -75,6 +75,11 @@ export function DesktopSidebar({ currentPath }: DesktopSidebarProps) {
           <path d="M6 20 C 6 16, 10 14, 12 14 C 14 14, 18 16, 18 20" />
         </svg>
       ),
+    },
+    {
+      to: "/resenas",
+      label: "Reseñas y valoraciones",
+      icon: <IconStar size={22} filled={clean === "/resenas"} color="#E9B530" />,
     },
   ];
 
