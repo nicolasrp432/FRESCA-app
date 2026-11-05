@@ -204,32 +204,13 @@ export interface Review {
   createdAt: number;
 }
 
-const SEED_REVIEWS: Review[] = [
-  {
-    id: "rev_seed_1",
-    userName: "Camila R.",
-    rating: 5,
-    comment: "¡Me encantó la app! Tenía 4 bananos maduros que iba a botar y FRESCA me dio la receta de pan de banano con lo que tenía en la alacena. Quedó delicioso.",
-    tags: ["Recetas de rescate", "Ahorro de dinero"],
-    createdAt: Date.now() - 2 * 24 * 60 * 60 * 1000,
-  },
-  {
-    id: "rev_seed_2",
-    userName: "David M.",
-    rating: 5,
-    comment: "El escáner con la cámara reconoció de una mis mangos y aguacates. El diseño es hermoso y las notificaciones a la hora elegida son súper útiles.",
-    tags: ["Reconocimiento IA", "Avisos a tiempo", "Diseño hermoso"],
-    createdAt: Date.now() - 4 * 24 * 60 * 60 * 1000,
-  },
-  {
-    id: "rev_seed_3",
-    userName: "Valentina S.",
-    rating: 5,
-    comment: "Llevo dos semanas usándola y ya he rescatado más de 5 kg de fruta. Es súper fácil e intuitiva.",
-    tags: ["Fácil e intuitiva", "Ahorro de dinero"],
-    createdAt: Date.now() - 6 * 24 * 60 * 60 * 1000,
-  },
-];
+function isRealReview(r: Review): boolean {
+  if (!r || !r.id) return false;
+  if (r.id.startsWith("rev_seed_")) return false;
+  const name = (r.userName || "").trim().toLowerCase();
+  if (name === "valentina s." || name === "camila r." || name === "david m.") return false;
+  return true;
+}
 
 function computeReviewStats(reviews: Review[]) {
   const total = reviews.length;
@@ -261,12 +242,13 @@ app.get("/api/reviews", async (c) => {
       list = [];
     }
   }
-  if (!list || list.length === 0) {
-    list = SEED_REVIEWS;
-    await storage.put("reviews:list", JSON.stringify(list)).catch(() => undefined);
+  // Filtrar reseñas de muestra para asegurar que solo se muestren reseñas reales
+  const filtered = (list || []).filter(isRealReview);
+  if (raw && list.length !== filtered.length) {
+    await storage.put("reviews:list", JSON.stringify(filtered)).catch(() => undefined);
   }
-  const stats = computeReviewStats(list);
-  return c.json({ ok: true, reviews: list, stats });
+  const stats = computeReviewStats(filtered);
+  return c.json({ ok: true, reviews: filtered, stats });
 });
 
 interface ReviewBody {
@@ -312,9 +294,7 @@ app.post("/api/reviews", async (c) => {
       currentList = [];
     }
   }
-  if (!currentList || currentList.length === 0) {
-    currentList = [...SEED_REVIEWS];
-  }
+  currentList = (currentList || []).filter(isRealReview);
 
   const updatedList = [newReview, ...currentList].slice(0, 200);
   await storage.put("reviews:list", JSON.stringify(updatedList));
