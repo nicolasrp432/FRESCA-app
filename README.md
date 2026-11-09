@@ -10,7 +10,7 @@ Implementa el diseño "FRESCA · Prototipo completo" (sistema visual *arcilla de
 |---|---|
 | **Entrada** | Splash, bienvenida con deslizamiento, acceso por SMS o Google (Supabase, opcional), "Seguir sin cuenta", personas en casa, nombre y hora del aviso. |
 | **Hoy** | Plato con los 4 alimentos más urgentes según su madurez estimada, idea del día, pregunta "¿Cómo está tu…?" que corrige la estimación, kg rescatados en la semana, avisos sin leer. |
-| **Escanear** | Cámara trasera real (`getUserMedia`), linterna, foto desde galería, chequeo de luz. La IA (Google Gemini 2.5 Flash u OpenRouter) reconoce banano, papaya, fresa, mango, tomate y aguacate, su madurez y el daño visible. |
+| **Escanear** | Cámara trasera real (`getUserMedia`), linterna, foto desde galería, chequeo de luz. La IA (Google Gemini 2.5 Flash u OpenRouter) reconoce banano, papaya, fresa, mango, tomate, aguacate, limón y zanahoria, su madurez y el daño visible. |
 | **Resultado / Daño / No reconocida** | Confirmación cuando hay duda (¿papaya o mango?), escalera del rescate, "A la compostera" (queda registrado), agregar a la canasta, consejos de luz o distancia. |
 | **Ficha** | Madurez ajustable (se guarda), ideas según el punto, señales de descarte, cómo guardarlo, nutrición orientativa, recetas. |
 | **Mi canasta** | Canasto ilustrado ordenado por urgencia y lista con "Lo usé" / "Lo boté" + motivo. |

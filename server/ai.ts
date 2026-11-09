@@ -1,6 +1,6 @@
 import * as z from "zod/v4";
 
-const KINDS = ["banano", "papaya", "fresa", "mango", "tomate", "aguacate", "limon"] as const;
+const KINDS = ["banano", "papaya", "fresa", "mango", "tomate", "aguacate", "limon", "zanahoria"] as const;
 export type Kind = (typeof KINDS)[number];
 
 export class AiError extends Error {
@@ -92,12 +92,12 @@ export const AnalysisSchema = z.object({
 export type Analysis = z.infer<typeof AnalysisSchema>;
 
 const ANALYZE_SYSTEM = `Eres el ojo de FRESCA, una app colombiana que ayuda a no botar fruta, verdura ni desperdicios de cocina.
-Recibes una foto de lo que hay en el mesón o la nevera. Reconoce estos alimentos permitidos: banano, papaya, fresa, mango, tomate, aguacate, limon.
+Recibes una foto de lo que hay en el mesón o la nevera. Reconoce estos alimentos permitidos: banano, papaya, fresa, mango, tomate, aguacate, limon, zanahoria.
 
 Para cada uno estima su madurez con esta escala:
 0 = fresco o verde, aguanta varios días
 1 = en su punto, listo para comer o usar
-2 = muy maduro, úsalo hoy (pintas en el banano, limón de cáscara seca o blando, tomate blando, aguacate suave)
+2 = muy maduro o flexible, úsalo hoy (pintas en el banano, limón de cáscara seca o blando, tomate blando, aguacate suave, zanahoria flexible o con puntas secas)
 3 = pasado o desperdicio: cáscaras, restos o daño que revisar
 
 Distingue madurez de daño: maduro no es dañado. Marca damage solo si ves moho, líquido saliendo o podredumbre clara. Valores permitidos de damage: "ninguno", "moho", "liquido", "podrido".
@@ -108,13 +108,13 @@ Responde ÚNICAMENTE en JSON con esta estructura exacta:
 {
   "items": [
     {
-      "kind": "banano" | "papaya" | "fresa" | "mango" | "tomate" | "aguacate" | "limon",
+      "kind": "banano" | "papaya" | "fresa" | "mango" | "tomate" | "aguacate" | "limon" | "zanahoria",
       "count": 1,
       "stage": 1,
       "confidence": 0.95,
       "alternative": null,
       "damage": "ninguno",
-      "note": "Limón fresco y jugoso, ideal para limonada o aderezo"
+      "note": "Zanahoria crujiente y fresca, ideal para crema o ensalada"
     }
   ],
   "others": [],
@@ -158,6 +158,10 @@ export function fallbackVisionAnalysis(_base64: string, meta?: ColorMeta): Analy
       note = "Papaya en su punto lista para picar o batido refrescante.";
       count = meta.count || 1;
       stage = 1;
+    } else if (kind === "zanahoria") {
+      note = "Zanahoria crujiente y fresca, ideal para crema, sopa o ensalada.";
+      count = meta.count || 2;
+      stage = 1;
     }
   } else {
     let h = meta?.h;
@@ -184,6 +188,12 @@ export function fallbackVisionAnalysis(_base64: string, meta?: ColorMeta): Analy
       note = "Banano en su punto con pintas dulces, listo para comer o batido.";
       count = 2;
       stage = 2;
+    } else if (h >= 18 && h <= 38 && !isRound) {
+      // Zanahoria alargada de color naranja intenso
+      kind = "zanahoria";
+      note = "Zanahoria crujiente y fresca, ideal para crema, sopa campesina o jugo.";
+      count = 2;
+      stage = 1;
     } else if (h < 22 || h > 340) {
       if ((s ?? 0) > 62 && (v ?? 0) < 65) {
         kind = "fresa";
@@ -394,7 +404,7 @@ Responde ÚNICAMENTE en JSON con esta estructura exacta:
   "color": "#F2844F",
   "ingredients": [
     {
-      "kind": "banano" | "papaya" | "fresa" | "mango" | "tomate" | "aguacate" | null,
+      "kind": "banano" | "papaya" | "fresa" | "mango" | "tomate" | "aguacate" | "limon" | "zanahoria" | null,
       "pantry": "leche" | "canela" | ... | null,
       "qty": 2,
       "label": "2 bananos muy maduros"

@@ -191,6 +191,56 @@ export const RECIPES: Recipe[] = [
       { action: "servir", verb: "Sirve", detail: "1 tazón", note: "la fruta encima" },
     ],
   },
+  {
+    id: "crema-zanahoria", name: "Crema de zanahoria", time: "25 min", minutes: 25, difficulty: 1, serves: "4 platos",
+    tags: ["salado", "rapido"], saves: ["zanahoria"], dish: "bowl", color: "#F28C38", topping: "#4E7B3A", validated: true,
+    ingredients: [
+      { kind: "zanahoria", qty: 3, label: "3 zanahorias" },
+      { pantry: "cebolla", qty: 1, label: "1 cebolla larga o cabezona" },
+      { pantry: "aceite", qty: 1, label: "1 cucharada de aceite" },
+      { pantry: "sal", qty: 1, label: "Sal al gusto" },
+      { pantry: "agua", qty: 1, label: "2 tazas de agua o caldo" },
+    ],
+    steps: [
+      { action: "cortar", verb: "Pica", detail: "las zanahorias y la cebolla", note: "no importa que no queden perfectas", show: ["zanahoria"] },
+      { action: "hervir", verb: "Cocina", detail: "15 min a fuego medio", note: "con agua, aceite y sal hasta ablandar", timer: 900 },
+      { action: "licuar", verb: "Licúa", detail: "1 min hasta textura cremosa", note: "añade caldo caliente con cuidado", timer: 60 },
+      { action: "servir", verb: "Sirve", detail: "4 platos calientes", note: "decora con hojitas verdes o cilantro" },
+    ],
+  },
+  {
+    id: "torta-zanahoria", name: "Torta de zanahoria", time: "50 min", minutes: 50, difficulty: 2, serves: "1 molde",
+    tags: ["dulce"], saves: ["zanahoria"], dish: "loaf", color: "#D2702E", validated: true,
+    ingredients: [
+      { kind: "zanahoria", qty: 2, label: "2 zanahorias maduras" },
+      { pantry: "harina", qty: 1, label: "2 tazas de harina" },
+      { pantry: "huevo", qty: 2, label: "2 huevos" },
+      { pantry: "azucar", qty: 1, label: "½ taza de azúcar" },
+      { pantry: "canela", qty: 1, label: "1 cucharadita de canela" },
+      { pantry: "aceite", qty: 1, label: "½ taza de aceite" },
+    ],
+    steps: [
+      { action: "cortar", verb: "Ralla", detail: "las 2 zanahorias finitas", note: "aprovecha todo hasta la punta", show: ["zanahoria"] },
+      { action: "mezclar", verb: "Mezcla", detail: "huevos, azúcar, aceite y canela", note: "agrega la harina y la zanahoria rallada" },
+      { action: "hornear", verb: "Hornea", detail: "40 min a 180 °C", note: "hasta que un palillo salga seco", timer: 2400 },
+      { action: "servir", verb: "Sirve", detail: "en rebanadas", note: "esponjosa y con aroma a canela" },
+    ],
+  },
+  {
+    id: "jugo-zanahoria-limon", name: "Jugo de zanahoria y limón", time: "5 min", minutes: 5, difficulty: 1, serves: "2 vasos",
+    tags: ["dulce", "rapido"], saves: ["zanahoria", "limon"], dish: "glass", color: "#F47E24", validated: true,
+    ingredients: [
+      { kind: "zanahoria", qty: 2, label: "2 zanahorias" },
+      { kind: "limon", qty: 1, label: "1 limón jugoso" },
+      { pantry: "agua", qty: 1, label: "2 vasos de agua fría" },
+      { pantry: "azucar", qty: 1, label: "2 cucharadas de panela o miel" },
+    ],
+    steps: [
+      { action: "cortar", verb: "Trocea", detail: "las zanahorias en rodajas", note: "exprime el limón aparte", show: ["zanahoria", "limon"] },
+      { action: "licuar", verb: "Licúa", detail: "zanahoria, zumo de limón y agua", note: "a máxima potencia 1 min", timer: 60 },
+      { action: "servir", verb: "Sirve", detail: "2 vasos bien fríos", note: "bomba de vitamina A y C" },
+    ],
+  },
 ];
 
 export const recipeById = (id: string, extra: Recipe[] = []) => [...RECIPES, ...extra].find((r) => r.id === id);

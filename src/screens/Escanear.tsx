@@ -473,6 +473,8 @@ export default function Escanear() {
                             ? "La pepa y cáscara de aguacate tienen taninos y minerales: rállala para abonar macetas o ponla en agua a germinar."
                             : main.kind === "tomate"
                             ? "Piel y semillas de tomate: sofríelas con cebolla para salsas base o llévalas a la compostera."
+                            : main.kind === "zanahoria"
+                            ? "Los extremos y piel de zanahoria son ideales para hacer caldo de verduras casero; las hojas verdes se pueden picar como perejil o en pesto."
                             : "Cáscaras y restos orgánicos: devuélvelos a la tierra para nutrir tus macetas y huerta comunitaria."}
                         </p>
                       </div>

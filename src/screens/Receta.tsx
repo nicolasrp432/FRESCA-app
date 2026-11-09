@@ -208,7 +208,25 @@ function StepView({ step, recipe }: { step: Step; recipe: Recipe }) {
           <div style={{ position: "absolute", left: 30, top: 90, transform: "rotate(-8deg)" }}><Fruta kind={shown[0]} stage={2} ring={false} size={150} decorative /></div>
           <div style={{ position: "absolute", left: 150, top: 120 }}><Fruta kind={shown[1] ?? shown[0]} stage={2} ring={false} size={190} decorative /></div>
           <div style={{ position: "absolute", left: 70, top: 250, display: "flex", gap: 10 }}>
-            {[300, 1200, 2100, 3000].map((d) => <span key={d} className="pop" style={{ width: 38, height: 38, borderRadius: "50%", background: "#FFF1C4", boxShadow: "inset 0 0 0 4px #F3D98A, 0 4px 8px rgba(90,62,34,.25)", animationDelay: `${d}ms` }} />)}
+            {[300, 1200, 2100, 3000].map((d) => {
+              const isCarrot = shown[0] === "zanahoria" || shown[1] === "zanahoria";
+              return (
+                <span
+                  key={d}
+                  className="pop"
+                  style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: "50%",
+                    background: isCarrot ? "#FFA052" : "#FFF1C4",
+                    boxShadow: isCarrot
+                      ? "inset 0 0 0 4px #F2782A, 0 4px 10px rgba(180,70,10,.35)"
+                      : "inset 0 0 0 4px #F3D98A, 0 4px 8px rgba(90,62,34,.25)",
+                    animationDelay: `${d}ms`,
+                  }}
+                />
+              );
+            })}
           </div>
           <div className="chop" aria-hidden="true" style={{ position: "absolute", left: 150, top: 70, width: 200, height: 70 }}>
             <svg width="200" height="70" viewBox="0 0 160 56"><path d="M8 34 C 40 34, 92 30, 116 20 L 116 40 L 8 40 C 4 40, 4 34, 8 34 Z" fill="#CBD1CA" /><path d="M8 34 C 40 34, 92 30, 116 20 L 116 26 C 92 34, 40 38, 8 38 Z" fill="#E9EDE8" /><rect x="116" y="22" width="40" height="18" rx="7" fill="#8A5A32" /><circle cx="128" cy="31" r="2" fill="#E8C690" /><circle cx="144" cy="31" r="2" fill="#E8C690" /></svg>

@@ -195,8 +195,13 @@ export function extractColorMeta(canvas: HTMLCanvasElement): ColorMeta {
     dominant = "aguacate";
     count = 1;
   } else if (orangePixels > yellowPixels) {
-    dominant = v > 68 ? "mango" : "papaya";
-    count = 1;
+    if (!isRound && aspectRatio >= 1.35) {
+      dominant = "zanahoria";
+      count = 2;
+    } else {
+      dominant = v > 68 ? "mango" : "papaya";
+      count = 1;
+    }
   }
 
   return {

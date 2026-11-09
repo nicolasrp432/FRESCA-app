@@ -366,3 +366,17 @@ input[type='range']::-moz-range-thumb { width: 28px; height: 28px; border-radius
   box-shadow: 0 6px 20px rgba(70, 45, 20, 0.08);
 }
 
+/* ── Animaciones y efectos de Zanahoria ──────────────────────── */
+.carrot-bounce {
+  animation: carrot-bounce 2.2s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+}
+@keyframes carrot-bounce {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(3deg); }
+}
+
+.carrot-glow {
+  filter: drop-shadow(0 8px 16px rgba(242, 140, 56, 0.35));
+}
+
+

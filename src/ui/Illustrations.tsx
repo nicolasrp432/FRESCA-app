@@ -12,13 +12,15 @@ const DISH_IMAGES: Record<Dish, string> = {
 };
 
 export function getRecipeImage(dish?: Dish, recipeId?: string): string {
+  if (recipeId === "crema-zanahoria") return "/images/3d/receta-crema-zanahoria.png";
+  if (recipeId === "torta-zanahoria") return "/images/3d/receta-torta-zanahoria.png";
   if (recipeId === "guacamole") return "/images/3d/receta-guacamole.png";
   if (recipeId === "avena-banano") return "/images/3d/receta-avena.png";
   if (recipeId === "hogao") return "/images/3d/receta-hogao.png";
   if (recipeId === "mermelada-fresa") return "/images/3d/receta-mermelada.png";
   if (recipeId === "paletas-papaya") return "/images/3d/receta-paleta.png";
   if (recipeId === "pan-banano") return "/images/3d/receta-pan.png";
-  if (recipeId === "batido-banano" || recipeId === "jugo-papaya-fresa" || recipeId === "limonada-casera") return "/images/3d/smoothie.png";
+  if (recipeId === "batido-banano" || recipeId === "jugo-papaya-fresa" || recipeId === "limonada-casera" || recipeId === "jugo-zanahoria-limon") return "/images/3d/smoothie.png";
   if (dish && DISH_IMAGES[dish]) return DISH_IMAGES[dish];
   return "/images/3d/receta.png";
 }

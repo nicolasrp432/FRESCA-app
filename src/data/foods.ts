@@ -1,4 +1,4 @@
-export const KINDS = ["banano", "papaya", "fresa", "mango", "tomate", "aguacate", "limon"] as const;
+export const KINDS = ["banano", "papaya", "fresa", "mango", "tomate", "aguacate", "limon", "zanahoria"] as const;
 export type Kind = (typeof KINDS)[number];
 export type Stage = 0 | 1 | 2 | 3;
 
@@ -160,6 +160,24 @@ export const FOODS: Record<Kind, Food> = {
     save: [{ icon: "congelar", label: "Congela en cubos de jugo" }, { icon: "nevera", label: "En frasco con agua" }],
     buyTip: "Compra limones pesados para su tamaño.",
     buyLess: "Compra limones de a tres",
+  },
+  zanahoria: {
+    kind: "zanahoria", name: "Zanahoria", plural: "Zanahorias", article: "una", grams: 110, pesos: 600,
+    days: [6, 4, 3],
+    stageNames: ["Firme y crujiente", "En su punto", "Algo flexible", "Pasada"],
+    storage: { title: "En el cajón de la nevera", tip: "¿Algo flexible? Sumérgela en agua fría 30 min y recupera su textura crocante." },
+    nutrition: { label: "1 mediana", per: "Orientativo · 1 mediana", values: [{ v: "2,2 g", u: "fibra" }, { v: "320", u: "mg potasio" }, { v: "6", u: "mg vit. C" }, { v: "25", u: "kcal" }] },
+    ideas: [
+      [{ t: "Bastones con limón", m: "2 min" }, { t: "Rallada en ensalada", m: "5 min" }],
+      [{ t: "Salteada con arroz", m: "10 min" }, { t: "Sopa campesina", m: "20 min" }],
+      [{ t: "Crema de zanahoria", m: "25 min" }, { t: "Jugo de zanahoria", m: "5 min" }],
+      [{ t: "Torta de zanahoria", m: "50 min" }, { t: "A la compostera", m: "1 min" }],
+    ],
+    normal: [{ stage: 1, label: "Firme" }, { stage: 2, label: "Flexible" }, { stage: 2, label: "Puntas secas" }, { stage: 3, label: "Blanda o arrugada" }],
+    discard: ["moho", "liquido", "agrio"],
+    save: [{ icon: "congelar", label: "Congela en rodajas o cubos" }, { icon: "nevera", label: "En frasco con agua en la nevera" }],
+    buyTip: "Elige zanahorias firmes, lisas y sin manchas oscuras.",
+    buyLess: "Compra zanahorias para la semana",
   },
 };
 

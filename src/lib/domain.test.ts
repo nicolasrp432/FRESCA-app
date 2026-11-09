@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { FOODS } from "../data/foods";
+import { recipeById } from "../data/recipes";
 import { DAY, buildNotices, buyLessTips, computeStats, currentStage, eventFor, levelFor, startOfWeek, type Item } from "./domain";
 
 const T0 = new Date(2026, 10, 2, 9, 0).getTime(); // lunes 2 nov 2026
@@ -15,6 +17,14 @@ describe("madurez", () => {
   });
   it("la fresa se pasa más rápido", () => {
     expect(currentStage(item({ kind: "fresa" }), T0 + 2 * DAY)).toBe(2);
+  });
+  it("la zanahoria aguanta más tiempo firme y avanza según sus días", () => {
+    const z = item({ kind: "zanahoria" });
+    expect(currentStage(z, T0)).toBe(0);
+    expect(currentStage(z, T0 + 5.9 * DAY)).toBe(0);
+    expect(currentStage(z, T0 + 6 * DAY)).toBe(1);
+    expect(currentStage(z, T0 + 10 * DAY)).toBe(2);
+    expect(currentStage(z, T0 + 13 * DAY)).toBe(3);
   });
   it("parte del último estado confirmado", () => {
     expect(currentStage(item({ stage: 2, stageAt: T0 }), T0 + DAY)).toBe(2);
@@ -56,5 +66,12 @@ describe("consejos y avisos", () => {
     const n = buildNotices([item({ qty: 2 })], [eventFor("rescued", "papaya", 1, {}, T0)], () => "Batido", T0 + 5.5 * DAY);
     expect(n.some((x) => x.title === "2 bananos piden uso")).toBe(true);
     expect(n.some((x) => x.title === "Tu matera sacó un brote")).toBe(true);
+  });
+  it("incluye zanahorias y sus recetas correspondientes", () => {
+    expect(FOODS.zanahoria).toBeDefined();
+    expect(FOODS.zanahoria.name).toBe("Zanahoria");
+    expect(recipeById("crema-zanahoria")).toBeDefined();
+    expect(recipeById("torta-zanahoria")).toBeDefined();
+    expect(recipeById("jugo-zanahoria-limon")).toBeDefined();
   });
 });
